@@ -127,9 +127,6 @@ const PathFindingAlgorithms = () => {
     for (let i = 0; i < visitedNodes.length; i++) {
       setTimeout(() => {
         const node = visitedNodes[i];
-        node.distance = Infinity;
-        node.isVisited = false;
-        node.previousNode = null;
         setTimeout(() => {
           document.getElementById(
             `node-${node.row}-${node.col}`
@@ -137,6 +134,18 @@ const PathFindingAlgorithms = () => {
         }, 2 * i);
       });
     }
+
+    setGrid((prevGrid) => {
+      for (let i = 0; i < 30; i++) {
+        for (let j = 0; j < 50; j++) {
+          prevGrid[i][j].distance = Infinity;
+          prevGrid[i][j].isVisited = false;
+          prevGrid[i][j].previousNode = null;
+        }
+      }
+      return prevGrid;
+    });
+
     setDisable(false);
     setDisableClear(false);
   };

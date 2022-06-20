@@ -1,5 +1,6 @@
 import React from "react";
 import Header from "./ui/Header";
+import Footer from "./ui/Footer";
 import Routes from './Routes'
 
 function App() {
@@ -7,6 +8,7 @@ function App() {
     <>
       <Header />
         <Routes/>
+        {/* <Footer/> */}
     </>
   );
 }

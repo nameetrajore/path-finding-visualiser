@@ -1,12 +1,14 @@
-import { Box, Button, Grid, Slider, Typography } from "@mui/material";
+import { Box, Button, Grid, Slider, Typography, FormControl, InputLabel, Select,MenuItem } from "@mui/material";
 import React, { useState } from "react";
 import { AppBar, Toolbar } from "@mui/material";
+import { pathActions } from "../app/store";
 import Node from "../ui/Node/Node";
 import { getNodesInShortestPathOrder } from "../algorithms/dijkstra";
 import { dijkstra } from "../algorithms/dijkstra";
 import { useSelector, useDispatch } from "react-redux";
 
 const PathFindingAlgorithms = () => {
+  const dispatch = useDispatch();
   const start = useSelector((state) => state.start);
   const finish = useSelector((state) => state.finish);
   const [mouseIsPressed, setMouseIsPressed] = useState(false);
@@ -26,7 +28,12 @@ const PathFindingAlgorithms = () => {
     // console.log(row, col);
     // console.log(finish, start);
     // console.log(e.target);
-    if (e.target.className === "start" || e.target.className === "finish")
+    console.log(e.target.closest("div"));
+    if (disable) return;
+    if (
+      e.target.closest("div").className === "start" ||
+      e.target.closest("div").className === "finish"
+    )
       return;
     const newGrid = getNewGridWithWallToggled(grid, row, col);
     setGrid(newGrid);
@@ -35,6 +42,7 @@ const PathFindingAlgorithms = () => {
 
   const mouseEnterHandler = (row, col) => {
     if (!mouseIsPressed) return;
+
     console.log("executed");
     if (
       (start.row === row && start.col === col) ||
@@ -78,8 +86,9 @@ const PathFindingAlgorithms = () => {
   const [grid, setGrid] = useState(getInitialGrid());
   const [speed, setSpeed] = useState(10);
   const [disable, setDisable] = useState(false);
-  const [disableClear, setDisableClear] = useState(false);
+  const [disableClear, setDisableClear] = useState(true);
   const [visitedNodes, setVisitedNodes] = useState([]);
+  const [algo, setAlgo] = useState("");
 
   const animateDijkstra = (visitedNodesInOrder, nodesInShortestPathOrder) => {
     setDisable(true);
@@ -107,7 +116,7 @@ const PathFindingAlgorithms = () => {
           " node node-visited node-shortest-path";
       }, 50 * i);
     }
-    setDisableClear(true);
+    setDisableClear(false);
   };
 
   const visualiseDijkstra = () => {
@@ -121,6 +130,42 @@ const PathFindingAlgorithms = () => {
       grid[finish.row][finish.col]
     );
     animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
+  };
+
+  //For future development
+  const visualiseWithoutAnimation = (row, col) => {
+    for (let i = 0; i < 50; i++) {
+      for (let j = 0; j < 30; j++) {
+        const node = grid[i][j];
+        console.log(grid);
+        document.getElementById(
+          `node-${node.row}-${node.col}`
+        ).className = `node ${node.isWall ? "node-wall" : ""}`;
+      }
+    }
+    let visitedNodesInOrder = dijkstra(
+      grid,
+      grid[start.row][start.col],
+      grid[row][col]
+    );
+    const nodesInShortestPathOrder = getNodesInShortestPathOrder(
+      grid[row][col]
+    );
+
+    for (let i = 0; i <= visitedNodesInOrder.length; i++) {
+      if (i === visitedNodesInOrder.length) {
+        for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
+          const node = nodesInShortestPathOrder[i];
+          document.getElementById(`node-${node.row}-${node.col}`).className =
+            " node node-visited-no-anim node-shortest-path-no-anim";
+        }
+        return;
+      }
+      const node = visitedNodesInOrder[i];
+      const element = document.getElementById(`node-${node.row}-${node.col}`);
+      if (!element.className.includes("node-visited"))
+        element.className = "node node-visited-no-anim";
+    }
   };
 
   const clearBoard = () => {
@@ -147,19 +192,45 @@ const PathFindingAlgorithms = () => {
     });
 
     setDisable(false);
-    setDisableClear(false);
+    setDisableClear(true);
+  };
+
+  const resetBoard = () => {
+    dispatch(pathActions.setStart({ row: 14, col: 4 }));
+    dispatch(pathActions.setFinish({ row: 14, col: 45 }));
+    clearBoard();
+    setGrid((prevGrid) => {
+      for (let i = 0; i < 30; i++) {
+        for (let j = 0; j < 50; j++) {
+          prevGrid[i][j].isWall = false;
+          prevGrid[i][j].distance = Infinity;
+          prevGrid[i][j].isVisited = false;
+          prevGrid[i][j].previousNode = null;
+        }
+      }
+      return prevGrid;
+    });
   };
 
   const speedHandler = (event, value) => {
     setSpeed(value);
   };
 
+  const handleSelect = (e)=>{
+      setAlgo(e.target.value);
+  }
+
+  const runAlgo = () =>{
+    if(algo==="Dijkstra's Algorithm")
+    visualiseDijkstra();
+  }
+
   return (
     <>
       <Box m="12vh" />
       <Grid
         container
-        minWidth="1600px"
+       
         sx={{
           px: 4,
         }}
@@ -172,15 +243,38 @@ const PathFindingAlgorithms = () => {
             {grid.map((row, rowIdx) => (
               <div key={rowIdx}>
                 {row.map((node, nodeIdx) => (
-                  <Node key={nodeIdx} {...node} />
+                  <Node
+                    key={nodeIdx}
+                    {...node}
+                    disable={disable}
+                    disableClear={disableClear}
+                    visualiseWithoutAnimation={visualiseWithoutAnimation}
+                  />
                 ))}
               </div>
             ))}
           </Grid>
         </Grid>
+
         <Grid item xs={2}>
+          <FormControl variant="standard" fullWidth >
+            <InputLabel id="demo-simple-select-label">Choose Algorithm</InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={algo}
+              label="Algorithm"
+              onChange={handleSelect}
+              sx={{mb:2}}
+              
+            >
+              <MenuItem value="Dijkstra's Algorithm">Djikstra's Algorithm</MenuItem>
+              {/* <MenuItem value={2}>Twenty</MenuItem>
+              <MenuItem value={3}>Thirty</MenuItem> */}
+            </Select>
+          </FormControl>
           <Button
-            onClick={visualiseDijkstra}
+            onClick={runAlgo}
             variant="contained"
             disableElevation
             size="large"
@@ -197,10 +291,22 @@ const PathFindingAlgorithms = () => {
             size="large"
             fullWidth
             color="error"
-            disabled={!disableClear}
+            disabled={disableClear}
             sx={{ mt: 2 }}
           >
             Clear Board
+          </Button>
+          <Button
+            onClick={resetBoard}
+            variant=""
+            disableElevation
+            size="large"
+            fullWidth
+            disabled={(disable || !disableClear) && (!disable || disableClear)}
+            color="error"
+            sx={{ mt: 2 }}
+          >
+            Reset
           </Button>
           <Grid sx={{ mt: 2 }}>
             <Typography>Speed</Typography>
@@ -210,7 +316,7 @@ const PathFindingAlgorithms = () => {
               defaultValue={speed}
               value={speed}
               min={1}
-              max={35}
+              max={30}
               valueLabelDisplay="auto"
               onChange={speedHandler}
               disabled={disable}

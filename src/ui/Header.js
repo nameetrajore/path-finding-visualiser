@@ -1,5 +1,13 @@
 import React from "react";
-import { AppBar, Toolbar, Box, Button, Typography, Link } from "@mui/material";
+import {
+  AppBar,
+  Toolbar,
+  Box,
+  Button,
+  Typography,
+  Link,
+  Tooltip,
+} from "@mui/material";
 import { Route, Routes } from "react-router-dom";
 import PathFindingAlgorithms from "../pages/PathFindingAlgorithms";
 import SortingAlgorithms from "../pages/SortingAlgorithms";
@@ -36,6 +44,7 @@ const Header = () => {
   const SortingAlgorithmsButton = (
     <Button
       variant="contained"
+      disabled
       size="large"
       disableElevation
       to={{ pathname: "/sign-up" }}
@@ -50,6 +59,7 @@ const Header = () => {
   const PhysicsSimulationsButton = (
     <Button
       variant="contained"
+      disabled
       size="large"
       disableElevation
       to="/path-finding-algorithms"
@@ -86,13 +96,18 @@ const Header = () => {
               color="primary"
               sx={{ flexGrow: "1" }}
             >
-              <Link underline="none" to={{ pathname: "/" }}>
-                VISUALISER
+              <Link underline="none" href='/'>
+                VISUALIZER
               </Link>
             </Typography>
+
             {PathFindingAlgorithmsButton}
-            {SortingAlgorithmsButton}
-            {PhysicsSimulationsButton}
+            <Tooltip title=" Work In Progress!">
+              <div>{SortingAlgorithmsButton}</div>
+            </Tooltip>
+            <Tooltip title="Work In Progress!">
+              <div>{PhysicsSimulationsButton}</div>
+            </Tooltip>
           </Toolbar>
         </AppBar>
       </ElevationScroll>

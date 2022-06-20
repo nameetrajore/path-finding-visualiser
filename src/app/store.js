@@ -14,7 +14,7 @@ const pathSlice = createSlice({
     },
     setFinish(state, action) {
       state.finish = action.payload;
-    }
+    },
   },
 });
 

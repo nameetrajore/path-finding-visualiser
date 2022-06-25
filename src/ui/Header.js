@@ -96,18 +96,8 @@ const Header = () => {
               color="primary"
               sx={{ flexGrow: "1" }}
             >
-              <Link underline="none" href='/'>
-                VISUALIZER
-              </Link>
+                PATH FINDING VISUALISER
             </Typography>
-
-            {PathFindingAlgorithmsButton}
-            <Tooltip title=" Work In Progress!">
-              <div>{SortingAlgorithmsButton}</div>
-            </Tooltip>
-            <Tooltip title="Work In Progress!">
-              <div>{PhysicsSimulationsButton}</div>
-            </Tooltip>
           </Toolbar>
         </AppBar>
       </ElevationScroll>

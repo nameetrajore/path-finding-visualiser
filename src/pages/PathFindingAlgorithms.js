@@ -1,4 +1,15 @@
-import { Box, Button, Grid, Slider, Typography, FormControl, InputLabel, Select,MenuItem } from "@mui/material";
+import {
+  Box,
+  Button,
+  Grid,
+  Slider,
+  Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
+  Tooltip,
+} from "@mui/material";
 import React, { useState } from "react";
 import { AppBar, Toolbar } from "@mui/material";
 import { pathActions } from "../app/store";
@@ -6,6 +17,10 @@ import Node from "../ui/Node/Node";
 import { getNodesInShortestPathOrder } from "../algorithms/dijkstra";
 import { dijkstra } from "../algorithms/dijkstra";
 import { useSelector, useDispatch } from "react-redux";
+import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
+import IntroModal from '../ui/IntroModal'
+import { bfs, getNodesInShortestPathOrderBfs } from "../algorithms/bfs";
+import Guide from "../ui/Guide";
 
 const PathFindingAlgorithms = () => {
   const dispatch = useDispatch();
@@ -19,8 +34,33 @@ const PathFindingAlgorithms = () => {
     const newNode = {
       ...node,
       isWall: !node.isWall,
+      weight: 1,
     };
     newGrid[row][col] = newNode;
+    return newGrid;
+  };
+
+  const getNewGridWithWallFalse = (grid, row, col) => {
+    const newGrid = grid.slice();
+    const node = newGrid[row][col];
+    const newNode = {
+      ...node,
+      isWall: false,
+      weight: 1,
+    };
+    newGrid[row][col] = newNode;
+    return newGrid;
+  };
+
+  const getGridWithWeights = (row, col, weight) => {
+    const newGrid = grid.slice();
+    const node = newGrid[row][col];
+    const newNode = {
+      ...node,
+      weight,
+    };
+    newGrid[row][col] = newNode;
+    console.log(newGrid);
     return newGrid;
   };
 
@@ -35,6 +75,12 @@ const PathFindingAlgorithms = () => {
       e.target.closest("div").className === "finish"
     )
       return;
+    if (e.target.closest("div").className.indexOf("weight") >= 0) {
+      const newGrid = getNewGridWithWallFalse(grid,row,col);
+      setGrid(newGrid);
+      return;
+    }
+    e.target.innerHTML = "";
     const newGrid = getNewGridWithWallToggled(grid, row, col);
     setGrid(newGrid);
     setMouseIsPressed(true);
@@ -62,9 +108,11 @@ const PathFindingAlgorithms = () => {
       row,
       col,
       distance: Infinity,
+      weight: 1,
       isVisited: false,
       isWall: false,
       previousNode: null,
+      getGridWithWeights,
       mouseDownHandler,
       mouseEnterHandler,
       mouseUpHandler,
@@ -89,8 +137,9 @@ const PathFindingAlgorithms = () => {
   const [disableClear, setDisableClear] = useState(true);
   const [visitedNodes, setVisitedNodes] = useState([]);
   const [algo, setAlgo] = useState("");
+  const [weight, setWeight] = useState(2);
 
-  const animateDijkstra = (visitedNodesInOrder, nodesInShortestPathOrder) => {
+  const animateAlgo = (visitedNodesInOrder, nodesInShortestPathOrder) => {
     setDisable(true);
     for (let i = 0; i <= visitedNodesInOrder.length; i++) {
       if (i === visitedNodesInOrder.length) {
@@ -129,8 +178,21 @@ const PathFindingAlgorithms = () => {
     const nodesInShortestPathOrder = getNodesInShortestPathOrder(
       grid[finish.row][finish.col]
     );
-    animateDijkstra(visitedNodesInOrder, nodesInShortestPathOrder);
+    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
   };
+
+  const visualiseBfs = ()=>{
+    let visitedNodesInOrder = bfs(
+      grid,
+      grid[start.row][start.col],
+      grid[finish.row][finish.col]
+    );
+    setVisitedNodes(visitedNodesInOrder);
+    const nodesInShortestPathOrder = getNodesInShortestPathOrderBfs(
+      grid[finish.row][finish.col]
+    );
+    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
+  }
 
   //For future development
   const visualiseWithoutAnimation = (row, col) => {
@@ -206,6 +268,7 @@ const PathFindingAlgorithms = () => {
           prevGrid[i][j].distance = Infinity;
           prevGrid[i][j].isVisited = false;
           prevGrid[i][j].previousNode = null;
+          prevGrid[i][j].weight = 1;
         }
       }
       return prevGrid;
@@ -216,21 +279,30 @@ const PathFindingAlgorithms = () => {
     setSpeed(value);
   };
 
-  const handleSelect = (e)=>{
-      setAlgo(e.target.value);
-  }
+  const weightHandler = (event, value) => {
+    setWeight(value);
+  };
 
-  const runAlgo = () =>{
-    if(algo==="Dijkstra's Algorithm")
-    visualiseDijkstra();
-  }
+  const weightStartDragHandler = (e, weight) => {
+    e.dataTransfer.setData("class", "weight");
+    e.dataTransfer.setData("weight", weight);
+  };
+
+  const handleSelect = (e) => {
+    setAlgo(e.target.value);
+  };
+
+  const runAlgo = () => {
+    if (algo === "Dijkstra's Algorithm") visualiseDijkstra();
+    if(algo === "bfs") visualiseBfs();
+  };
 
   return (
     <>
-      <Box m="12vh" />
+      <Box m="11vh" />
+      <IntroModal/>
       <Grid
         container
-       
         sx={{
           px: 4,
         }}
@@ -249,6 +321,7 @@ const PathFindingAlgorithms = () => {
                     disable={disable}
                     disableClear={disableClear}
                     visualiseWithoutAnimation={visualiseWithoutAnimation}
+                    setGrid={setGrid}
                   />
                 ))}
               </div>
@@ -257,18 +330,24 @@ const PathFindingAlgorithms = () => {
         </Grid>
 
         <Grid item xs={2}>
-          <FormControl variant="standard" fullWidth >
-            <InputLabel id="demo-simple-select-label">Choose Algorithm</InputLabel>
+          <FormControl variant="standard" fullWidth>
+            <InputLabel id="demo-simple-select-label">
+              Choose Algorithm
+            </InputLabel>
             <Select
               labelId="demo-simple-select-label"
               id="demo-simple-select"
               value={algo}
               label="Algorithm"
               onChange={handleSelect}
-              sx={{mb:2}}
-              
+              sx={{ mb: 2 }}
             >
-              <MenuItem value="Dijkstra's Algorithm">Djikstra's Algorithm</MenuItem>
+              <MenuItem value="Dijkstra's Algorithm">
+                Dijkstra's Algorithm
+              </MenuItem>
+              <MenuItem value="bfs">
+                Breadth First Search Algorithm
+              </MenuItem>
               {/* <MenuItem value={2}>Twenty</MenuItem>
               <MenuItem value={3}>Thirty</MenuItem> */}
             </Select>
@@ -322,6 +401,45 @@ const PathFindingAlgorithms = () => {
               disabled={disable}
             />
           </Grid>
+          <Grid container sx={{ mt: 2 }}>
+            <Grid item xs={10}>
+              <Typography>Weight</Typography>
+              <Slider
+                key="3"
+                size="small"
+                color="secondary"
+                defaultValue={weight}
+                value={weight}
+                min={2}
+                max={10}
+                valueLabelDisplay="auto"
+                onChange={weightHandler}
+                disabled={disable}
+              />
+            </Grid>
+            <Tooltip title="Drag & Drop" arrow followCursor>
+              <Grid
+                mt={3}
+                pl={1}
+                xs={2}
+                draggable
+                item
+                justifyItems="center"
+                alignItems="center"
+                onDragStart={(e) => weightStartDragHandler(e, weight)}
+                className="weight"
+                id={`weight-${weight}`}
+                sx={{ height: "25px" }}
+              >
+                <FitnessCenterIcon
+                  htmlColor={`rgb(${255 - weight * 20},${255 - weight * 20},${
+                    255 - weight * 20
+                  })`}
+                />
+              </Grid>
+            </Tooltip>
+          </Grid>
+          <Guide/>
         </Grid>
       </Grid>
     </>

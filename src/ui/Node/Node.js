@@ -3,11 +3,12 @@ import style from "./Node.css";
 import CircleIcon from "@mui/icons-material/Circle";
 import { useDispatch, useSelector } from "react-redux";
 import { pathActions } from "../../app/store";
+import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 
 const Node = (props) => {
   const start = useSelector((state) => state.start);
   const finish = useSelector((state) => state.finish);
-
+  
   const {
     row,
     col,
@@ -15,16 +16,19 @@ const Node = (props) => {
     distance,
     disable,
     disableClear,
+    setGrid,
+    weight,
     onMouseDown,
     onMouseEnter,
     visualiseWithoutAnimation,
     onMouseUp,
+    getGridWithWeights,
     isWall,
     mouseDownHandler,
     mouseEnterHandler,
     mouseUpHandler,
   } = props;
-
+  
   const dispatch = useDispatch();
 
   const onDragStartHandler = (e) => {
@@ -73,6 +77,10 @@ const Node = (props) => {
     if (row === start.row && col === start.col) return;
     if (className === "start") dispatch(pathActions.setStart({ row, col }));
     if (className === "finish") dispatch(pathActions.setFinish({ row, col }));
+    if (className === "weight") {
+      const newGrid = getGridWithWeights(row,col, parseInt(e.dataTransfer.getData("weight")));
+      setGrid(newGrid);
+    }
   };
 
   return (
@@ -109,6 +117,11 @@ const Node = (props) => {
             color="secondary"
             sx={{ marginBottom: "1px", width: "1.4vmax" }}
           />
+        </div>
+      )}
+      {!!(weight - 1) && (
+        <div className = {`weight-${weight}`}>
+          <FitnessCenterIcon htmlColor={`rgb(${255-weight*20},${255-weight*20},${255-weight*20})`} sx={{ marginBottom: "1px", width: "1.4vmax" }}/>
         </div>
       )}
     </div>

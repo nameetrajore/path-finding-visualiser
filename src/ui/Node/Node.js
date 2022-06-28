@@ -69,8 +69,8 @@ const Node = (props) => {
     const className = e.dataTransfer.getData("class");
     const sourceRow = e.dataTransfer.getData("row");
     const sourceCol = e.dataTransfer.getData("col");
-    console.log({ sourceRow, sourceCol });
-    console.log({ row, col });
+    // console.log({ sourceRow, sourceCol });
+    // console.log({ row, col });
     // console.log(className);
     e.target.classList.remove("outlined");
     if (row === finish.row && col === finish.col) return;
@@ -100,7 +100,7 @@ const Node = (props) => {
           className="start"
           draggable={!disable || !disableClear}
           onDragStart={onDragStartHandler}
-        >
+        > 
           <CircleIcon
             color="success"
             sx={{ marginBottom: "1px", width: "1.4vmax" }}

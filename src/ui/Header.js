@@ -7,12 +7,10 @@ import {
   Typography,
   Link,
   Tooltip,
+  IconButton,
 } from "@mui/material";
-import { Route, Routes } from "react-router-dom";
-import PathFindingAlgorithms from "../pages/PathFindingAlgorithms";
-import SortingAlgorithms from "../pages/SortingAlgorithms";
-import PhysicsSimulations from "../pages/PhysicsSimulations";
 import useScrollTrigger from "@mui/material/useScrollTrigger";
+import { QuestionMark } from "@mui/icons-material";
 
 function ElevationScroll(props) {
   const { children } = props;
@@ -40,53 +38,14 @@ const Header = () => {
       Path Finding Algorithms
     </Button>
   );
-
-  const SortingAlgorithmsButton = (
-    <Button
-      variant="contained"
-      disabled
-      size="large"
-      disableElevation
-      to={{ pathname: "/sign-up" }}
-      sx={{
-        marginRight: "1rem",
-      }}
-    >
-      Sorting Algorithms
-    </Button>
-  );
-
-  const PhysicsSimulationsButton = (
-    <Button
-      variant="contained"
-      disabled
-      size="large"
-      disableElevation
-      to="/path-finding-algorithms"
-    >
-      Physics Simulations
-    </Button>
-  );
-
-  const routes = (
-    <Routes>
-      <Route
-        path="/path-finding-algorithms"
-        element={<PathFindingAlgorithms />}
-      />
-      <Route path="/sorting-algorithms" element={<SortingAlgorithms />} />
-      <Route path="/physics-simulations" element={<PhysicsSimulations />} />
-    </Routes>
-  );
-
   return (
     <>
-      <ElevationScroll>
         <AppBar
-          color="inherit"
+          color="transparent"
           position="fixed"
           sx={{
             padding: "0.75rem",
+            boxShadow:'none'
           }}
         >
           <Toolbar>
@@ -99,8 +58,10 @@ const Header = () => {
                 PATH FINDING VISUALISER
             </Typography>
           </Toolbar>
+          {/* <IconButton>
+            <QuestionMark/>
+          </IconButton> */}
         </AppBar>
-      </ElevationScroll>
     </>
   );
 };

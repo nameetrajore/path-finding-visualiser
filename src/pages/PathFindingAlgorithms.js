@@ -18,15 +18,21 @@ import { getNodesInShortestPathOrder } from "../algorithms/dijkstra";
 import { dijkstra } from "../algorithms/dijkstra";
 import { useSelector, useDispatch } from "react-redux";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
-import IntroModal from '../ui/IntroModal'
+import IntroModal from "../ui/IntroModal";
 import { bfs, getNodesInShortestPathOrderBfs } from "../algorithms/bfs";
 import Guide from "../ui/Guide";
+import { dfs, getNodesInShortestPathOrderDfs } from "../algorithms/dfs";
+import {
+  bestFirst,
+  getNodesInShortestPathOrderBestFirst,
+} from "../algorithms/bestFirst";
 
 const PathFindingAlgorithms = () => {
   const dispatch = useDispatch();
   const start = useSelector((state) => state.start);
   const finish = useSelector((state) => state.finish);
   const [mouseIsPressed, setMouseIsPressed] = useState(false);
+  const [mazeDensity, setMazeDensity] = useState(5);
 
   const getNewGridWithWallToggled = (grid, row, col) => {
     const newGrid = grid.slice();
@@ -60,7 +66,7 @@ const PathFindingAlgorithms = () => {
       weight,
     };
     newGrid[row][col] = newNode;
-    console.log(newGrid);
+    // console.log(newGrid);
     return newGrid;
   };
 
@@ -68,7 +74,7 @@ const PathFindingAlgorithms = () => {
     // console.log(row, col);
     // console.log(finish, start);
     // console.log(e.target);
-    console.log(e.target.closest("div"));
+    // console.log(e.target.closest("div"));
     if (disable) return;
     if (
       e.target.closest("div").className === "start" ||
@@ -76,7 +82,7 @@ const PathFindingAlgorithms = () => {
     )
       return;
     if (e.target.closest("div").className.indexOf("weight") >= 0) {
-      const newGrid = getNewGridWithWallFalse(grid,row,col);
+      const newGrid = getNewGridWithWallFalse(grid, row, col);
       setGrid(newGrid);
       return;
     }
@@ -86,21 +92,52 @@ const PathFindingAlgorithms = () => {
     setMouseIsPressed(true);
   };
 
-  const mouseEnterHandler = (row, col) => {
-    if (!mouseIsPressed) return;
+  const clearMaze = () => {
+    for (let i = 0; i < 50; i++) {
+      for (let j = 0; j < 30; j++) {
+        if (
+          (start.row !== j || start.col !== i) &&
+          (finish.row !== j || finish.col !== i)
+        ) {
+          const newGrid = getNewGridWithWallFalse(grid, j, i);
+          setGrid(newGrid);
+        }
+      }
+    }
+  };
 
-    console.log("executed");
-    if (
-      (start.row === row && start.col === col) ||
-      (finish.col === col && finish.row === row)
-    )
-      return;
-    const newGrid = getNewGridWithWallToggled(grid, row, col);
-    setGrid(newGrid);
+  const generateRandomMaze = () => {
+    clearMaze();
+    for (let i = 0; i < 50; i++) {
+      for (let j = 0; j < 30; j++) {
+        let r = Math.random();
+        if (
+          r < 0.033 * mazeDensity &&
+          (start.row !== j || start.col !== i) &&
+          (finish.row !== j || finish.col !== i)
+        ) {
+          const newGrid = getNewGridWithWallToggled(grid, j, i);
+          setGrid(newGrid);
+        }
+      }
+    }
+  };
+
+  const mouseEnterHandler = (row, col) => {
+    // if (!mouseIsPressed) return;
+
+    // console.log("executed");
+    // if (
+    //   (start.row === row && start.col === col) ||
+    //   (finish.col === col && finish.row === row)
+    // )
+    //   return;
+    // const newGrid = getNewGridWithWallToggled(grid, row, col);
+    // setGrid(newGrid);
   };
 
   const mouseUpHandler = () => {
-    setMouseIsPressed(false);
+    // setMouseIsPressed(false);
   };
 
   const createNode = (col, row) => {
@@ -112,10 +149,10 @@ const PathFindingAlgorithms = () => {
       isVisited: false,
       isWall: false,
       previousNode: null,
-      getGridWithWeights,
-      mouseDownHandler,
-      mouseEnterHandler,
-      mouseUpHandler,
+      // getGridWithWeights,
+      // mouseDownHandler,
+      // mouseEnterHandler,
+      // mouseUpHandler,
     };
   };
 
@@ -163,9 +200,10 @@ const PathFindingAlgorithms = () => {
         const node = nodesInShortestPathOrder[i];
         document.getElementById(`node-${node.row}-${node.col}`).className =
           " node node-visited node-shortest-path";
-      }, 50 * i);
+        if (i === nodesInShortestPathOrder.length - 2) setDisableClear(false);
+      }, 20 * i);
     }
-    setDisableClear(false);
+    if (nodesInShortestPathOrder.length === 1) setDisableClear(false);
   };
 
   const visualiseDijkstra = () => {
@@ -174,6 +212,7 @@ const PathFindingAlgorithms = () => {
       grid[start.row][start.col],
       grid[finish.row][finish.col]
     );
+    console.log(visitedNodesInOrder);
     setVisitedNodes(visitedNodesInOrder);
     const nodesInShortestPathOrder = getNodesInShortestPathOrder(
       grid[finish.row][finish.col]
@@ -181,7 +220,7 @@ const PathFindingAlgorithms = () => {
     animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
   };
 
-  const visualiseBfs = ()=>{
+  const visualiseBfs = () => {
     let visitedNodesInOrder = bfs(
       grid,
       grid[start.row][start.col],
@@ -192,14 +231,40 @@ const PathFindingAlgorithms = () => {
       grid[finish.row][finish.col]
     );
     animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
-  }
+  };
+
+  const visualiseBestFirst = () => {
+    const visitedNodesInOrder = bestFirst(
+      grid,
+      grid[start.row][start.col],
+      grid[finish.row][finish.col]
+    );
+    setVisitedNodes(visitedNodesInOrder);
+    const nodesInShortestPathOrder = getNodesInShortestPathOrderBestFirst(
+      grid[finish.row][finish.col]
+    );
+    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
+  };
+
+  const visualiseDfs = () => {
+    let visitedNodesInOrder = dfs(
+      grid,
+      grid[start.row][start.col],
+      grid[finish.row][finish.col]
+    );
+    setVisitedNodes(visitedNodesInOrder);
+    const nodesInShortestPathOrder = getNodesInShortestPathOrderDfs(
+      grid[finish.row][finish.col]
+    );
+    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
+  };
 
   //For future development
   const visualiseWithoutAnimation = (row, col) => {
     for (let i = 0; i < 50; i++) {
       for (let j = 0; j < 30; j++) {
         const node = grid[i][j];
-        console.log(grid);
+        // console.log(grid);
         document.getElementById(
           `node-${node.row}-${node.col}`
         ).className = `node ${node.isWall ? "node-wall" : ""}`;
@@ -242,6 +307,14 @@ const PathFindingAlgorithms = () => {
       });
     }
 
+    if (
+      document.getElementsByClassName("node node-visited node-shortest-path")
+        .length != 0
+    )
+      document.getElementsByClassName(
+        "node node-visited node-shortest-path"
+      )[0].className = "node";
+
     setGrid((prevGrid) => {
       for (let i = 0; i < 30; i++) {
         for (let j = 0; j < 50; j++) {
@@ -260,7 +333,6 @@ const PathFindingAlgorithms = () => {
   const resetBoard = () => {
     dispatch(pathActions.setStart({ row: 14, col: 4 }));
     dispatch(pathActions.setFinish({ row: 14, col: 45 }));
-    clearBoard();
     setGrid((prevGrid) => {
       for (let i = 0; i < 30; i++) {
         for (let j = 0; j < 50; j++) {
@@ -271,6 +343,7 @@ const PathFindingAlgorithms = () => {
           prevGrid[i][j].weight = 1;
         }
       }
+      clearBoard();
       return prevGrid;
     });
   };
@@ -294,17 +367,20 @@ const PathFindingAlgorithms = () => {
 
   const runAlgo = () => {
     if (algo === "Dijkstra's Algorithm") visualiseDijkstra();
-    if(algo === "bfs") visualiseBfs();
+    if (algo === "bfs") visualiseBfs();
+    if (algo === "dfs") visualiseDfs();
+    if (algo === "best-first") visualiseBestFirst();
   };
 
   return (
     <>
       <Box m="11vh" />
-      <IntroModal/>
+      <IntroModal />
       <Grid
         container
         sx={{
           px: 4,
+          minWidth: "1400px",
         }}
         direction="row"
         justifyContent="space-evenly"
@@ -322,6 +398,11 @@ const PathFindingAlgorithms = () => {
                     disableClear={disableClear}
                     visualiseWithoutAnimation={visualiseWithoutAnimation}
                     setGrid={setGrid}
+                    getGridWithWeights={getGridWithWeights}
+                    mouseDownHandler={mouseDownHandler}
+                    mouseEnterHandler={mouseEnterHandler}
+                    mouseUpHandler={mouseUpHandler}
+                    // added mouseUp, mouseDown and mouseEnter 
                   />
                 ))}
               </div>
@@ -329,7 +410,17 @@ const PathFindingAlgorithms = () => {
           </Grid>
         </Grid>
 
-        <Grid item xs={2}>
+        <Grid
+          item
+          xs={2.5}
+          sx={{
+            boxShadow:
+              "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;",
+            p: 3,
+            mb: 2,
+            borderRadius: 2,
+          }}
+        >
           <FormControl variant="standard" fullWidth>
             <InputLabel id="demo-simple-select-label">
               Choose Algorithm
@@ -345,11 +436,11 @@ const PathFindingAlgorithms = () => {
               <MenuItem value="Dijkstra's Algorithm">
                 Dijkstra's Algorithm
               </MenuItem>
-              <MenuItem value="bfs">
-                Breadth First Search Algorithm
+              <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>
+              <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
+              <MenuItem value="best-first">
+                Best First Search Algorithm
               </MenuItem>
-              {/* <MenuItem value={2}>Twenty</MenuItem>
-              <MenuItem value={3}>Thirty</MenuItem> */}
             </Select>
           </FormControl>
           <Button
@@ -359,7 +450,7 @@ const PathFindingAlgorithms = () => {
             size="large"
             fullWidth
             color="success"
-            disabled={disable}
+            disabled={disable || algo === ""}
           >
             Visualise
           </Button>
@@ -375,9 +466,10 @@ const PathFindingAlgorithms = () => {
           >
             Clear Board
           </Button>
+
           <Button
             onClick={resetBoard}
-            variant=""
+            variant="outlined"
             disableElevation
             size="large"
             fullWidth
@@ -420,7 +512,7 @@ const PathFindingAlgorithms = () => {
             <Tooltip title="Drag & Drop" arrow followCursor>
               <Grid
                 mt={3}
-                pl={1}
+                pl={2}
                 xs={2}
                 draggable
                 item
@@ -439,7 +531,53 @@ const PathFindingAlgorithms = () => {
               </Grid>
             </Tooltip>
           </Grid>
-          <Guide/>
+          <Grid sx={{ mt: 2 }}>
+            <Typography>Maze Density</Typography>
+            <Slider
+              key="10"
+              size="small"
+              color="primary"
+              defaultValue={mazeDensity}
+              value={mazeDensity}
+              min={1}
+              max={10}
+              valueLabelDisplay="auto"
+              onChange={(e, value) => {
+                setMazeDensity(value);
+              }}
+              disabled={disable}
+            />
+          </Grid>
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <Button
+                onClick={generateRandomMaze}
+                variant="contained"
+                disableElevation
+                size="large"
+                disabled={disable}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Generate Maze
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                onClick={clearMaze}
+                variant="outlined"
+                disableElevation
+                size="large"
+                fullWidth
+                disabled={disable}
+                sx={{ mt: 2 }}
+              >
+                Clear All Walls
+              </Button>
+            </Grid>
+          </Grid>
+
+          <Guide />
         </Grid>
       </Grid>
     </>

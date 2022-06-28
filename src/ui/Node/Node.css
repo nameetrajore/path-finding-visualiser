@@ -50,7 +50,14 @@
 }
 
 .node-wall {
-  background-color: rgb(12, 53, 71);
+  animation-name: wall;
+  animation-duration: .3s;
+  animation-timing-function: ease-out;
+  animation-delay: 0;
+  animation-direction: alternate;
+  animation-iteration-count: 1;
+  animation-fill-mode: forwards;
+  animation-play-state: running;
 }
 
 .outlined {
@@ -83,5 +90,22 @@
   100% {
     transform: scale(1);
     background-color: rgb(255, 230, 88);
+  }
+}
+
+  @keyframes wall {
+  0% {
+    transform: scale(0.6);
+    background-color: rgb(131, 131, 131);
+  }
+
+  50% {
+    transform: scale(1.2);
+    background-color: rgb(75, 75, 75);
+  }
+
+  100% {
+    transform: scale(1);
+    background-color: rgb(26, 26, 26);
   }
 }

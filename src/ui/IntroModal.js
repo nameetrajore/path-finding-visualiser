@@ -8,9 +8,9 @@ import Step from "@mui/material/Step";
 import StepLabel from "@mui/material/StepLabel";
 import StepButton from "@mui/material/StepButton";
 import { Grid } from "@mui/material";
-import image from "../resources/IMG_1572.jpeg";
-import image2 from "../resources/IMG_1573.jpeg";
-import image3 from "../resources/IMG_1575.jpeg";
+import image from "../resources/IMG_1572.jpg";
+import image2 from "../resources/IMG_1573.jpg";
+import image3 from "../resources/IMG_1575.jpg";
 
 const style = {
   position: "absolute",
@@ -79,7 +79,16 @@ export default function BasicModal() {
   };
 
   const Step1 = (
-    <Grid sx={{ minHeight: "400px", m: 6 }}>
+    <Grid
+      sx={{
+        minHeight: "400px",
+        m: 6,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
       {" "}
       <Typography variant="h3" fontWeight={500} mb={2}>
         Welcome to Path Finding Visualiser!
@@ -91,10 +100,6 @@ export default function BasicModal() {
       <Box
         component="img"
         sx={{
-          position: "absolute",
-          top: "66%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
           maxHeight: 250,
         }}
         alt="The house from the offer."
@@ -104,7 +109,16 @@ export default function BasicModal() {
   );
 
   const Step2 = (
-    <Grid sx={{ minHeight: "400px", m: 6 }}>
+    <Grid
+      sx={{
+        minHeight: "400px",
+        m: 6,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
       {" "}
       <Typography variant="h4" fontWeight={500} mb={2}>
         What is a path finding algorithm?
@@ -118,10 +132,6 @@ export default function BasicModal() {
       <Box
         component="img"
         sx={{
-          position: "absolute",
-          top: "66%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
           maxHeight: 250,
         }}
         alt="The house from the offer."
@@ -131,37 +141,44 @@ export default function BasicModal() {
   );
 
   const Step3 = (
-    <Grid sx={{ minHeight: "400px", m: 6 }}>
+    <Grid
+      sx={{
+        minHeight: "400px",
+        m: 6,
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        flexDirection: "column",
+      }}
+    >
       {" "}
       <Typography variant="h4" fontWeight={500} mb={2}>
         Features
       </Typography>
-      <Typography variant="h6" fontWeight={400}>
-        1. You can choose your own algorithm!
-      </Typography>
-      <Typography variant="h6" fontWeight={400}>
-        2. You can set your own start and end points!
-      </Typography>
-      <Typography variant="h6" fontWeight={400}>
-        3. You can set walls anywhere!
-      </Typography>
-      <Typography variant="h6" fontWeight={400}>
-        4. You can drag and drop different weights!
-      </Typography>
-      <Typography variant="h6" fontWeight={400}>
-        5. You can set your own animation speed!
-      </Typography>
-      <Typography variant="h6" fontWeight={400}>
-        6. Generate a random maze!
-      </Typography>
+      <Grid m={2}>
+        <Typography variant="h6" fontWeight={400}>
+          1. You can choose your own algorithm!
+        </Typography>
+        <Typography variant="h6" fontWeight={400}>
+          2. You can set your own start and end points!
+        </Typography>
+        <Typography variant="h6" fontWeight={400}>
+          3. You can set walls anywhere!
+        </Typography>
+        <Typography variant="h6" fontWeight={400}>
+          4. You can drag and drop different weights!
+        </Typography>
+        <Typography variant="h6" fontWeight={400}>
+          5. You can set your own animation speed!
+        </Typography>
+        <Typography variant="h6" fontWeight={400}>
+          6. Generate a random maze!
+        </Typography>
+      </Grid>
       <Box
         component="img"
         sx={{
-          position: "absolute",
-          top: "70%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          maxHeight: 180,
+          maxHeight: 250,
         }}
         alt="The house from the offer."
         src={image3}
@@ -169,9 +186,9 @@ export default function BasicModal() {
     </Grid>
   );
 
-  React.useEffect(()=>{
+  React.useEffect(() => {
     handleOpen();
-  },[]);
+  }, []);
   return (
     <div>
       <Modal

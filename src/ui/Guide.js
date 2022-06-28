@@ -8,7 +8,7 @@ const Guide = () => {
   return (
     <Grid
       container
-      sx={{ p: 3, mt: 26, borderRadius: "10px", outline: "1px solid #C7C7C7" }}
+      sx={{ p: 3, mt: 2, borderRadius: "10px", outline: "1px solid #C7C7C7" }}
     >
       <Grid item xs={10} mb={1}>
         <Typography>Start Node</Typography>

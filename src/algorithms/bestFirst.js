@@ -52,7 +52,41 @@ function getNeighbors(current, grid){
 }
 
 function heuristic( nodeA, nodeB, grid){
-    return( Math.abs(nodeA.row - nodeB.row) + Math.abs(nodeA.col - nodeB.col));
+    let h = 0;
+  if (nodeB.row > nodeA.row) {
+    if (nodeA.col < nodeB.col) {
+      for (let i = nodeA.row ; i <= nodeB.row; i++) {
+        for (let j = nodeA.col ; j <= nodeB.col; j++) {
+          h = h + grid[i][j].weight;
+        }
+      }
+    }
+    if (nodeA.col >= nodeB.col) {
+        for (let i = nodeA.row ; i <= nodeB.row; i++) {
+          for (let j = nodeB.col ; j <= nodeA.col; j++) {
+            h = h + grid[i][j].weight;
+          }
+        }
+      }
+  }
+  else if (nodeB.row <= nodeA.row) {
+    if (nodeA.col < nodeB.col) {
+      for (let i = nodeB.row; i <= nodeA.row; i++) {
+        for (let j = nodeA.col; j <= nodeB.col; j++) {
+          h = h + grid[i][j].weight;
+        }
+      }
+    }
+    if (nodeA.col >= nodeB.col) {
+        for (let i = nodeB.row ; i <= nodeA.row; i++) {
+          for (let j = nodeB.col ; j <= nodeA.col; j++) {
+            h = h + grid[i][j].weight;
+          }
+        }
+      }
+  }
+  return h;
+   // return( Math.abs(nodeA.row - nodeB.row) + Math.abs(nodeA.col - nodeB.col));
 }
 
 export function getNodesInShortestPathOrderBestFirst(finishNode){

@@ -30,9 +30,10 @@ import NotFoundModal from "../ui/NotFoundModal";
 import { astar, getNodesInShortestPathOrderAStar } from "../algorithms/astar";
 
 const PathFindingAlgorithms = () => {
-
-  // const cols = window.innerWidth;
-  // const rows = window.innerHeight;
+  // const cols = window.innerWidth/36.2;
+  // const rows = window.innerHeight/30;
+  const cols = 55;
+  const rows = 30;
 
   const dispatch = useDispatch();
   const start = useSelector((state) => state.start);
@@ -99,14 +100,14 @@ const PathFindingAlgorithms = () => {
   };
 
   const clearMaze = () => {
-    for (let i = 0; i < 50; i++) {
-      for (let j = 0; j < 30; j++) {
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
         // if (
         //   (start.row !== j || start.col !== i) &&
         //   (finish.row !== j || finish.col !== i)
         // ) {
-          const newGrid = getNewGridWithWallFalse(grid, j, i);
-          setGrid(newGrid);
+        const newGrid = getNewGridWithWallFalse(grid, j, i);
+        setGrid(newGrid);
         // }
       }
     }
@@ -114,8 +115,8 @@ const PathFindingAlgorithms = () => {
 
   const generateRandomMaze = () => {
     clearMaze();
-    for (let i = 0; i < 50; i++) {
-      for (let j = 0; j < 30; j++) {
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
         let r = Math.random();
         if (
           r < 0.033 * mazeDensity &&
@@ -131,8 +132,8 @@ const PathFindingAlgorithms = () => {
 
   const generateRandomWeightMaze = () => {
     clearMaze();
-    for (let i = 0; i < 50; i++) {
-      for (let j = 0; j < 30; j++) {
+    for (let i = 0; i < cols; i++) {
+      for (let j = 0; j < rows; j++) {
         let w = Math.floor(Math.random() * 10) + 2;
         let r = Math.random();
         if (
@@ -172,7 +173,7 @@ const PathFindingAlgorithms = () => {
       isVisited: false,
       isWall: false,
       previousNode: null,
-      f:0,
+      f: 0,
       // getGridWithWeights,
       // mouseDownHandler,
       // mouseEnterHandler,
@@ -182,9 +183,9 @@ const PathFindingAlgorithms = () => {
 
   const getInitialGrid = () => {
     const grid = [];
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < rows; i++) {
       let currentRow = [];
-      for (let j = 0; j < 50; j++) {
+      for (let j = 0; j < cols; j++) {
         currentRow.push(createNode(j, i));
       }
       grid.push(currentRow);
@@ -306,8 +307,8 @@ const PathFindingAlgorithms = () => {
 
   //For future development
   const visualiseWithoutAnimation = (row, col) => {
-    // for (let i = 0; i < 50; i++) {
-    //   for (let j = 0; j < 30; j++) {
+    // for (let i = 0; i < cols; i++) {
+    //   for (let j = 0; j < rows; j++) {
     //     const node = grid[i][j];
     //     // console.log(grid);
     //     document.getElementById(
@@ -340,28 +341,42 @@ const PathFindingAlgorithms = () => {
   };
 
   const clearBoard = () => {
-    for (let i = 0; i < visitedNodes.length; i++) {
-      setTimeout(() => {
-        const node = visitedNodes[i];
+    for (let i = 0; i < rows; i++) {
+      for (let j = 0; j < cols; j++) {
+        const wall = document
+          .getElementById(`node-${i}-${j}`)
+          .classList.contains("node-wall")
+          ? "node-wall"
+          : "";
         setTimeout(() => {
-          document.getElementById(
-            `node-${node.row}-${node.col}`
-          ).className = `node ${node.isWall ? "node-wall" : ""}`;
-        }, 2 * i);
-      });
+          document.getElementById(`node-${i}-${j}`).className = `node ${wall}`;
+        }, 50 * j);
+      }
     }
+    // for (let i = 0; i < visitedNodes.length; i++) {
+    //   setTimeout(() => {
+    //     document.getElementById(
+    //       `node-${finish.row}-${finish.col}`).className ='node';
+    //     const node = visitedNodes[i];
+    //     setTimeout(() => {
+    //       document.getElementById(
+    //         `node-${node.row}-${node.col}`
+    //       ).className = `node ${node.isWall ? "node-wall" : ""}`;
+    //     }, 2 * i);
+    //   });
+    // }
 
-    if (
-      document.getElementsByClassName("node node-visited node-shortest-path")
-        .length !== 0
-    )
-      document.getElementsByClassName(
-        "node node-visited node-shortest-path"
-      )[0].className = "node";
+    // if (
+    //   document.getElementsByClassName("node node-visited node-shortest-path")
+    //     .length !== 0
+    // )
+    //   document.getElementsByClassName(
+    //     "node node-visited node-shortest-path"
+    //   )[0].className = "node";
 
     setGrid((prevGrid) => {
-      for (let i = 0; i < 30; i++) {
-        for (let j = 0; j < 50; j++) {
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
           prevGrid[i][j].distance = Infinity;
           prevGrid[i][j].isVisited = false;
           prevGrid[i][j].previousNode = null;
@@ -376,10 +391,10 @@ const PathFindingAlgorithms = () => {
 
   const resetBoard = () => {
     dispatch(pathActions.setStart({ row: 14, col: 4 }));
-    dispatch(pathActions.setFinish({ row: 14, col: 45 }));
+    dispatch(pathActions.setFinish({ row: 14, col: 50 }));
     setGrid((prevGrid) => {
-      for (let i = 0; i < 30; i++) {
-        for (let j = 0; j < 50; j++) {
+      for (let i = 0; i < rows; i++) {
+        for (let j = 0; j < cols; j++) {
           prevGrid[i][j].isWall = false;
           prevGrid[i][j].distance = Infinity;
           prevGrid[i][j].isVisited = false;
@@ -419,14 +434,14 @@ const PathFindingAlgorithms = () => {
 
   return (
     <>
-      <Box m="11vh" />
+      <Box m="10vh" />
       <IntroModal />
       <NotFoundModal notFound={notFound} setNotFound={setNotFound} />
       <Grid
         container
         sx={{
           px: 4,
-          minWidth: "1400px",
+          minWidth: "1600px",
         }}
         direction="row"
         justifyContent="space-evenly"
@@ -482,12 +497,12 @@ const PathFindingAlgorithms = () => {
               <MenuItem value="Dijkstra's Algorithm">
                 Dijkstra's Algorithm
               </MenuItem>
-              <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>
-              <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
+              <MenuItem value="astar">A* Search Algorithm</MenuItem>
               <MenuItem value="best-first">
                 Best First Search Algorithm
               </MenuItem>
-              <MenuItem value="astar">A* Search Algorithm</MenuItem>
+              <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
+              <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>
             </Select>
           </FormControl>
           <Button
@@ -540,7 +555,7 @@ const PathFindingAlgorithms = () => {
               defaultValue={speed}
               value={speed}
               min={1}
-              max={30}
+              max={25}
               valueLabelDisplay="auto"
               onChange={speedHandler}
               disabled={disable}

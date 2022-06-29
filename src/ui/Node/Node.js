@@ -104,7 +104,7 @@ const Node = (props) => {
         > 
           <CircleIcon
             color="success"
-            sx={{ marginBottom: "1px", width: "1.4vmax" }}
+            sx={{ marginBottom: "1px", width: "1.3vmax" }}
           />
         </div>
       )}
@@ -116,13 +116,13 @@ const Node = (props) => {
         >
           <CircleIcon
             color="error"
-            sx={{ marginBottom: "1px", width: "1.4vmax" }}
+            sx={{ marginBottom: "1px", width: "1.3vmax" }}
           />
         </div>
       )}
       {!!(weight - 1) && (
         <div className = {`weight-${weight}`}>
-          <FitnessCenterIcon htmlColor={`rgb(${255-weight*20},${255-weight*20},${255-weight*20})`} sx={{ marginBottom: "1px", width: "1.4vmax" }}/>
+          <FitnessCenterIcon htmlColor={`rgb(${255-weight*20},${255-weight*20},${255-weight*20})`} sx={{ marginBottom: "1px", width: "1.3vmax" }}/>
         </div>
       )}
     </div>

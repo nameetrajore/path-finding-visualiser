@@ -26,8 +26,14 @@ import {
   bestFirst,
   getNodesInShortestPathOrderBestFirst,
 } from "../algorithms/bestFirst";
+import NotFoundModal from "../ui/NotFoundModal";
+import { astar, getNodesInShortestPathOrderAStar } from "../algorithms/astar";
 
 const PathFindingAlgorithms = () => {
+
+  // const cols = window.innerWidth;
+  // const rows = window.innerHeight;
+
   const dispatch = useDispatch();
   const start = useSelector((state) => state.start);
   const finish = useSelector((state) => state.finish);
@@ -95,13 +101,13 @@ const PathFindingAlgorithms = () => {
   const clearMaze = () => {
     for (let i = 0; i < 50; i++) {
       for (let j = 0; j < 30; j++) {
-        if (
-          (start.row !== j || start.col !== i) &&
-          (finish.row !== j || finish.col !== i)
-        ) {
+        // if (
+        //   (start.row !== j || start.col !== i) &&
+        //   (finish.row !== j || finish.col !== i)
+        // ) {
           const newGrid = getNewGridWithWallFalse(grid, j, i);
           setGrid(newGrid);
-        }
+        // }
       }
     }
   };
@@ -123,9 +129,26 @@ const PathFindingAlgorithms = () => {
     }
   };
 
+  const generateRandomWeightMaze = () => {
+    clearMaze();
+    for (let i = 0; i < 50; i++) {
+      for (let j = 0; j < 30; j++) {
+        let w = Math.floor(Math.random() * 10) + 2;
+        let r = Math.random();
+        if (
+          r < 0.05 * mazeDensity &&
+          (start.row !== j || start.col !== i) &&
+          (finish.row !== j || finish.col !== i)
+        ) {
+          const newGrid = getGridWithWeights(j, i, w);
+          setGrid(newGrid);
+        }
+      }
+    }
+  };
+
   const mouseEnterHandler = (row, col) => {
     // if (!mouseIsPressed) return;
-
     // console.log("executed");
     // if (
     //   (start.row === row && start.col === col) ||
@@ -149,6 +172,7 @@ const PathFindingAlgorithms = () => {
       isVisited: false,
       isWall: false,
       previousNode: null,
+      f:0,
       // getGridWithWeights,
       // mouseDownHandler,
       // mouseEnterHandler,
@@ -175,6 +199,7 @@ const PathFindingAlgorithms = () => {
   const [visitedNodes, setVisitedNodes] = useState([]);
   const [algo, setAlgo] = useState("");
   const [weight, setWeight] = useState(2);
+  const [notFound, setNotFound] = useState(false);
 
   const animateAlgo = (visitedNodesInOrder, nodesInShortestPathOrder) => {
     setDisable(true);
@@ -203,7 +228,10 @@ const PathFindingAlgorithms = () => {
         if (i === nodesInShortestPathOrder.length - 2) setDisableClear(false);
       }, 20 * i);
     }
-    if (nodesInShortestPathOrder.length === 1) setDisableClear(false);
+    if (nodesInShortestPathOrder.length === 1) {
+      setDisableClear(false);
+      setTimeout(setNotFound(true), 20);
+    }
   };
 
   const visualiseDijkstra = () => {
@@ -212,11 +240,12 @@ const PathFindingAlgorithms = () => {
       grid[start.row][start.col],
       grid[finish.row][finish.col]
     );
-    console.log(visitedNodesInOrder);
+    //console.log(visitedNodesInOrder);
     setVisitedNodes(visitedNodesInOrder);
     const nodesInShortestPathOrder = getNodesInShortestPathOrder(
       grid[finish.row][finish.col]
     );
+    console.log(nodesInShortestPathOrder.length);
     animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
   };
 
@@ -243,6 +272,22 @@ const PathFindingAlgorithms = () => {
     const nodesInShortestPathOrder = getNodesInShortestPathOrderBestFirst(
       grid[finish.row][finish.col]
     );
+    console.log(nodesInShortestPathOrder.length);
+    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
+  };
+
+  const visualiseAStar = () => {
+    const visitedNodesInOrder = astar(
+      grid,
+      grid[start.row][start.col],
+      grid[finish.row][finish.col]
+    );
+    //console.log(visitedNodesInOrder);
+    setVisitedNodes(visitedNodesInOrder);
+    const nodesInShortestPathOrder = getNodesInShortestPathOrderAStar(
+      grid[finish.row][finish.col]
+    );
+    console.log(nodesInShortestPathOrder.length);
     animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
   };
 
@@ -261,38 +306,37 @@ const PathFindingAlgorithms = () => {
 
   //For future development
   const visualiseWithoutAnimation = (row, col) => {
-    for (let i = 0; i < 50; i++) {
-      for (let j = 0; j < 30; j++) {
-        const node = grid[i][j];
-        // console.log(grid);
-        document.getElementById(
-          `node-${node.row}-${node.col}`
-        ).className = `node ${node.isWall ? "node-wall" : ""}`;
-      }
-    }
-    let visitedNodesInOrder = dijkstra(
-      grid,
-      grid[start.row][start.col],
-      grid[row][col]
-    );
-    const nodesInShortestPathOrder = getNodesInShortestPathOrder(
-      grid[row][col]
-    );
-
-    for (let i = 0; i <= visitedNodesInOrder.length; i++) {
-      if (i === visitedNodesInOrder.length) {
-        for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
-          const node = nodesInShortestPathOrder[i];
-          document.getElementById(`node-${node.row}-${node.col}`).className =
-            " node node-visited-no-anim node-shortest-path-no-anim";
-        }
-        return;
-      }
-      const node = visitedNodesInOrder[i];
-      const element = document.getElementById(`node-${node.row}-${node.col}`);
-      if (!element.className.includes("node-visited"))
-        element.className = "node node-visited-no-anim";
-    }
+    // for (let i = 0; i < 50; i++) {
+    //   for (let j = 0; j < 30; j++) {
+    //     const node = grid[i][j];
+    //     // console.log(grid);
+    //     document.getElementById(
+    //       `node-${node.row}-${node.col}`
+    //     ).className = `node ${node.isWall ? "node-wall" : ""}`;
+    //   }
+    // }
+    // let visitedNodesInOrder = dijkstra(
+    //   grid,
+    //   grid[start.row][start.col],
+    //   grid[row][col]
+    // );
+    // const nodesInShortestPathOrder = getNodesInShortestPathOrder(
+    //   grid[row][col]
+    // );
+    // for (let i = 0; i <= visitedNodesInOrder.length; i++) {
+    //   if (i === visitedNodesInOrder.length) {
+    //     for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
+    //       const node = nodesInShortestPathOrder[i];
+    //       document.getElementById(`node-${node.row}-${node.col}`).className =
+    //         " node node-visited-no-anim node-shortest-path-no-anim";
+    //     }
+    //     return;
+    //   }
+    //   const node = visitedNodesInOrder[i];
+    //   const element = document.getElementById(`node-${node.row}-${node.col}`);
+    //   if (!element.className.includes("node-visited"))
+    //     element.className = "node node-visited-no-anim";
+    // }
   };
 
   const clearBoard = () => {
@@ -309,7 +353,7 @@ const PathFindingAlgorithms = () => {
 
     if (
       document.getElementsByClassName("node node-visited node-shortest-path")
-        .length != 0
+        .length !== 0
     )
       document.getElementsByClassName(
         "node node-visited node-shortest-path"
@@ -367,15 +411,17 @@ const PathFindingAlgorithms = () => {
 
   const runAlgo = () => {
     if (algo === "Dijkstra's Algorithm") visualiseDijkstra();
-    if (algo === "bfs") visualiseBfs();
-    if (algo === "dfs") visualiseDfs();
-    if (algo === "best-first") visualiseBestFirst();
+    else if (algo === "bfs") visualiseBfs();
+    else if (algo === "dfs") visualiseDfs();
+    else if (algo === "best-first") visualiseBestFirst();
+    else if (algo === "astar") visualiseAStar();
   };
 
   return (
     <>
       <Box m="11vh" />
       <IntroModal />
+      <NotFoundModal notFound={notFound} setNotFound={setNotFound} />
       <Grid
         container
         sx={{
@@ -402,7 +448,7 @@ const PathFindingAlgorithms = () => {
                     mouseDownHandler={mouseDownHandler}
                     mouseEnterHandler={mouseEnterHandler}
                     mouseUpHandler={mouseUpHandler}
-                    // added mouseUp, mouseDown and mouseEnter 
+                    // added mouseUp, mouseDown and mouseEnter
                   />
                 ))}
               </div>
@@ -441,6 +487,7 @@ const PathFindingAlgorithms = () => {
               <MenuItem value="best-first">
                 Best First Search Algorithm
               </MenuItem>
+              <MenuItem value="astar">A* Search Algorithm</MenuItem>
             </Select>
           </FormControl>
           <Button
@@ -454,35 +501,41 @@ const PathFindingAlgorithms = () => {
           >
             Visualise
           </Button>
-          <Button
-            onClick={clearBoard}
-            variant="contained"
-            disableElevation
-            size="large"
-            fullWidth
-            color="error"
-            disabled={disableClear}
-            sx={{ mt: 2 }}
-          >
-            Clear Board
-          </Button>
-
-          <Button
-            onClick={resetBoard}
-            variant="outlined"
-            disableElevation
-            size="large"
-            fullWidth
-            disabled={(disable || !disableClear) && (!disable || disableClear)}
-            color="error"
-            sx={{ mt: 2 }}
-          >
-            Reset
-          </Button>
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <Button
+                onClick={clearBoard}
+                variant="contained"
+                disableElevation
+                size="large"
+                fullWidth
+                color="error"
+                disabled={disableClear}
+                sx={{ mt: 2 }}
+              >
+                Clear Board
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                onClick={resetBoard}
+                variant="outlined"
+                disableElevation
+                size="large"
+                fullWidth
+                disabled={
+                  (disable || !disableClear) && (!disable || disableClear)
+                }
+                color="error"
+                sx={{ mt: 2 }}
+              >
+                Reset
+              </Button>
+            </Grid>
+          </Grid>
           <Grid sx={{ mt: 2 }}>
             <Typography>Speed</Typography>
             <Slider
-              key="4"
               size="small"
               defaultValue={speed}
               value={speed}
@@ -497,7 +550,6 @@ const PathFindingAlgorithms = () => {
             <Grid item xs={10}>
               <Typography>Weight</Typography>
               <Slider
-                key="3"
                 size="small"
                 color="secondary"
                 defaultValue={weight}
@@ -534,7 +586,6 @@ const PathFindingAlgorithms = () => {
           <Grid sx={{ mt: 2 }}>
             <Typography>Maze Density</Typography>
             <Slider
-              key="10"
               size="small"
               color="primary"
               defaultValue={mazeDensity}
@@ -554,25 +605,36 @@ const PathFindingAlgorithms = () => {
                 onClick={generateRandomMaze}
                 variant="contained"
                 disableElevation
-                size="large"
                 disabled={disable}
                 fullWidth
                 sx={{ mt: 2 }}
               >
-                Generate Maze
+                Generate Wall Maze
               </Button>
             </Grid>
             <Grid item xs={6}>
               <Button
+                onClick={generateRandomWeightMaze}
+                variant="contained"
+                disableElevation
+                color="secondary"
+                disabled={disable}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Generate Weight Maze
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
                 onClick={clearMaze}
                 variant="outlined"
                 disableElevation
-                size="large"
                 fullWidth
                 disabled={disable}
-                sx={{ mt: 2 }}
+                sx={{ my: 1, mb: 2 }}
               >
-                Clear All Walls
+                Clear Maze
               </Button>
             </Grid>
           </Grid>

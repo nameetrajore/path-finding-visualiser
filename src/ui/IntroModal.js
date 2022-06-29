@@ -11,6 +11,7 @@ import { Grid } from "@mui/material";
 import image from "../resources/IMG_1572.jpg";
 import image2 from "../resources/IMG_1573.jpg";
 import image3 from "../resources/IMG_1575.jpg";
+import Fade from "@mui/material/Fade";
 
 const style = {
   position: "absolute",
@@ -22,6 +23,11 @@ const style = {
   boxShadow: 24,
   p: 4,
 };
+
+function preloadImage(url) {
+  var img = new Image();
+  img.src = url;
+}
 
 const steps = ["", "", ""];
 
@@ -74,7 +80,6 @@ export default function BasicModal() {
   const [open, setOpen] = React.useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => {
-    setActiveStep(0);
     setOpen(false);
   };
 
@@ -188,7 +193,11 @@ export default function BasicModal() {
 
   React.useEffect(() => {
     handleOpen();
+    preloadImage(image);
+    preloadImage(image2);
+    preloadImage(image3);
   }, []);
+
   return (
     <div>
       <Modal
@@ -197,58 +206,59 @@ export default function BasicModal() {
         aria-labelledby="modal-modal-title"
         aria-describedby="modal-modal-description"
       >
-        <Box sx={style}>
-          <Stepper nonLinear activeStep={activeStep}>
-            {steps.map((label, index) => (
-              <Step key={label} completed={completed[index]}>
-                <StepButton color="inherit" onClick={handleStep(index)}>
-                  {label}
-                </StepButton>
-              </Step>
-            ))}
-          </Stepper>
-          <div>
-            {allStepsCompleted() ? (
-              <React.Fragment>
-                <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
-                  <Box sx={{ flex: "1 1 auto" }} />
-                  <Button onClick={handleReset}>Reset</Button>
-                </Box>
-              </React.Fragment>
-            ) : (
-              <React.Fragment>
-                <Typography sx={{ mt: 2, mb: 1 }}>
+        <Fade in={open}>
+          <Box sx={style}>
+            <Stepper nonLinear activeStep={activeStep}>
+              {steps.map((label, index) => (
+                <Step key={label} completed={completed[index]}>
+                  <StepButton color="inherit" onClick={handleStep(index)}>
+                    {label}
+                  </StepButton>
+                </Step>
+              ))}
+            </Stepper>
+            <div>
+              {allStepsCompleted() ? (
+                <React.Fragment>
+                  <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
+                    <Box sx={{ flex: "1 1 auto" }} />
+                    <Button onClick={handleReset}>Reset</Button>
+                  </Box>
+                </React.Fragment>
+              ) : (
+                <React.Fragment>
                   {!activeStep && Step1}
                   {!(activeStep - 1) && Step2}
                   {!(activeStep - 2) && Step3}
-                </Typography>
-                <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
-                  <Button onClick={handleComplete} color="inherit">
-                    Skip
-                  </Button>
-                  <Box sx={{ flex: "1 1 auto" }} />
-                  {!!(activeStep - 2) && (
-                    <Button onClick={handleNext} sx={{ mr: 1 }}>
-                      Next
+
+                  <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
+                    <Button onClick={handleComplete} color="inherit">
+                      Skip
                     </Button>
-                  )}
-                  {!(activeStep - 2) && (
-                    <Button onClick={handleClose} sx={{ mr: 1 }}>
-                      Finish
+                    <Box sx={{ flex: "1 1 auto" }} />
+                    <Button
+                      disabled={activeStep === 0}
+                      onClick={handleBack}
+                      sx={{ mr: 1 }}
+                    >
+                      Back
                     </Button>
-                  )}
-                  <Button
-                    disabled={activeStep === 0}
-                    onClick={handleBack}
-                    sx={{ mr: 1 }}
-                  >
-                    Back
-                  </Button>
-                </Box>
-              </React.Fragment>
-            )}
-          </div>
-        </Box>
+                    {!!(activeStep - 2) && (
+                      <Button onClick={handleNext} sx={{ mr: 1 }}>
+                        Next
+                      </Button>
+                    )}
+                    {!(activeStep - 2) && (
+                      <Button onClick={handleClose} sx={{ mr: 1 }}>
+                        Finish
+                      </Button>
+                    )}
+                  </Box>
+                </React.Fragment>
+              )}
+            </div>
+          </Box>
+        </Fade>
       </Modal>
     </div>
   );

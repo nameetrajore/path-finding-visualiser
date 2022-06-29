@@ -69,16 +69,17 @@ const Node = (props) => {
     const className = e.dataTransfer.getData("class");
     const sourceRow = e.dataTransfer.getData("row");
     const sourceCol = e.dataTransfer.getData("col");
+    
     // console.log({ sourceRow, sourceCol });
     // console.log({ row, col });
     // console.log(className);
     e.target.classList.remove("outlined");
     if (row === finish.row && col === finish.col) return;
     if (row === start.row && col === start.col) return;
-    if (className === "start") dispatch(pathActions.setStart({ row, col }));
-    if (className === "finish") dispatch(pathActions.setFinish({ row, col }));
+    if (className === "start" && weight===1 && !isWall) dispatch(pathActions.setStart({ row, col }));
+    if (className === "finish" && weight===1 && !isWall) dispatch(pathActions.setFinish({ row, col }));
     if (className === "weight") {
-      const newGrid = getGridWithWeights(row,col, parseInt(e.dataTransfer.getData("weight")));
+      const newGrid = getGridWithWeights(row,col,parseInt(e.dataTransfer.getData("weight")));
       setGrid(newGrid);
     }
   };
@@ -114,7 +115,7 @@ const Node = (props) => {
           onDragStart={onDragStartHandler}
         >
           <CircleIcon
-            color="secondary"
+            color="error"
             sx={{ marginBottom: "1px", width: "1.4vmax" }}
           />
         </div>

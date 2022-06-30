@@ -163,22 +163,22 @@ export default function BasicModal() {
       </Typography>
       <Grid m={2}>
         <Typography variant="body1" fontWeight={400}>
-          1. You can choose your own algorithm!
+          1. Choose your own algorithm
         </Typography>
         <Typography variant="body1" fontWeight={400}>
-          2. You can set your own start and end points!
+          2. Choose start and end points
         </Typography>
         <Typography variant="body1" fontWeight={400}>
-          3. You can set walls anywhere!
+          3. Set walls anywhere you like
         </Typography>
         <Typography variant="body1" fontWeight={400}>
-          4. You can drag and drop different weights!
+          4. Drag and drop different weights
         </Typography>
         <Typography variant="body1" fontWeight={400}>
-          5. You can set your own animation speed!
+          5. Set your own animation speed
         </Typography>
         <Typography variant="body1" fontWeight={400}>
-          6. Generate a random maze!
+          6. Generate a random weight and wall maze
         </Typography>
       </Grid>
       <Box

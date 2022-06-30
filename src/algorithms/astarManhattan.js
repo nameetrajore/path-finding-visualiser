@@ -1,4 +1,4 @@
-export function astar(grid, startNode, finishNode){
+export function astarManhattan(grid, startNode, finishNode){
     startNode.distance = 0;
     //console.log(grid);
     const visitedNodesInOrder = [];
@@ -56,7 +56,7 @@ function heuristic( nodeA, nodeB, grid){
     return( Math.abs(nodeA.row - nodeB.row) + Math.abs(nodeA.col - nodeB.col));
 }
 
-export function getNodesInShortestPathOrderAStar(finishNode){
+export function getNodesInShortestPathOrderAStarManhattan(finishNode){
     const nodesInShortestPathOrder = [];
     let dist = 0;
     let currentNode = finishNode;

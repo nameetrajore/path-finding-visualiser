@@ -84,9 +84,9 @@ const Header = (props) => {
               <MenuItem value="Dijkstra's Algorithm">
                 Dijkstra's Algorithm
               </MenuItem>
-              <MenuItem value="astar">A* Search Algorithm</MenuItem>
-              <MenuItem value="best-first">
-                Best First Search Algorithm
+              <MenuItem value="astar">A* Manhattan Search Algorithm</MenuItem>
+              <MenuItem value="astar-diagonal">
+                A* Diagonal Search Algorithm
               </MenuItem>
               <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
               <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>

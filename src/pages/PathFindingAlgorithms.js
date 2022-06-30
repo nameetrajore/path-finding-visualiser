@@ -24,11 +24,11 @@ import { bfs, getNodesInShortestPathOrderBfs } from "../algorithms/bfs";
 import Guide from "../ui/Guide";
 import { dfs, getNodesInShortestPathOrderDfs } from "../algorithms/dfs";
 import {
-  bestFirst,
-  getNodesInShortestPathOrderBestFirst,
-} from "../algorithms/bestFirst";
+  astarDiagonal,
+  getNodesInShortestPathOrderAStarDiagonal,
+} from "../algorithms/astarDiagonal";
 import NotFoundModal from "../ui/NotFoundModal";
-import { astar, getNodesInShortestPathOrderAStar } from "../algorithms/astar";
+import { astarManhattan, getNodesInShortestPathOrderAStarManhattan } from "../algorithms/astarManhattan";
 
 const PathFindingAlgorithms = () => {
   // const cols = window.innerWidth/36.2;
@@ -264,14 +264,14 @@ const PathFindingAlgorithms = () => {
     animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
   };
 
-  const visualiseBestFirst = () => {
-    const visitedNodesInOrder = bestFirst(
+  const visualiseAStarDiagonal = () => {
+    const visitedNodesInOrder = astarDiagonal(
       grid,
       grid[start.row][start.col],
       grid[finish.row][finish.col]
     );
     setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrderBestFirst(
+    const nodesInShortestPathOrder = getNodesInShortestPathOrderAStarDiagonal(
       grid[finish.row][finish.col]
     );
     console.log(nodesInShortestPathOrder.length);
@@ -279,14 +279,14 @@ const PathFindingAlgorithms = () => {
   };
 
   const visualiseAStar = () => {
-    const visitedNodesInOrder = astar(
+    const visitedNodesInOrder = astarManhattan(
       grid,
       grid[start.row][start.col],
       grid[finish.row][finish.col]
     );
     //console.log(visitedNodesInOrder);
     setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrderAStar(
+    const nodesInShortestPathOrder = getNodesInShortestPathOrderAStarManhattan(
       grid[finish.row][finish.col]
     );
     console.log(nodesInShortestPathOrder.length);
@@ -430,7 +430,7 @@ const PathFindingAlgorithms = () => {
     if (algo === "Dijkstra's Algorithm") visualiseDijkstra();
     else if (algo === "bfs") visualiseBfs();
     else if (algo === "dfs") visualiseDfs();
-    else if (algo === "best-first") visualiseBestFirst();
+    else if (algo === "astar-diagonal") visualiseAStarDiagonal();
     else if (algo === "astar") visualiseAStar();
   };
 

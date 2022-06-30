@@ -1,8 +1,8 @@
 import { createSlice, configureStore } from "@reduxjs/toolkit";
 
 const initialState = {
-  start: {row:14,col:27},
-  finish: {row:14,col:28},
+  start: {row:14,col:4},
+  finish: {row:14,col:50},
 };
 
 const pathSlice = createSlice({

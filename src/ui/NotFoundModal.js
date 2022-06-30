@@ -10,6 +10,7 @@ const style = {
     borderRadius: "10px",
     boxShadow: 24,
     p: 4,
+    zoom:'80%'
   };
 
 const NotFoundModal = (props) => {
@@ -27,10 +28,10 @@ const NotFoundModal = (props) => {
         <Fade in={props.notFound}>
         <Box sx={style}>
         <Typography variant='h4' sx={{my:1}}>
-            No valid path found to the destination node :(
+            Destination not found :(
         </Typography>
-        <Typography variant='body2'>
-        But I'm sure you can take a plane there.
+        <Typography variant='body1'>
+        Keep playing!
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "row", pt: 2 }}>
         <Box sx={{ flex: "1 1 auto" }} />

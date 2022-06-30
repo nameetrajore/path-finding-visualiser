@@ -86,8 +86,8 @@ export default function BasicModal() {
   const Step1 = (
     <Grid
       sx={{
-        minHeight: "400px",
-        m: 6,
+        
+        m: 3,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -98,14 +98,14 @@ export default function BasicModal() {
       <Typography variant="h3" fontWeight={500} mb={2}>
         Welcome to Path Finding Visualiser!
       </Typography>
-      <Typography variant="h6" fontWeight={400}>
+      <Typography variant="body1" fontWeight={400}>
         This is a tutorial of all the features of the application. You are free
         to skip this and dive right in!
       </Typography>
       <Box
         component="img"
         sx={{
-          maxHeight: 250,
+          maxHeight: 200,
         }}
         alt="The house from the offer."
         src={image}
@@ -116,19 +116,20 @@ export default function BasicModal() {
   const Step2 = (
     <Grid
       sx={{
-        minHeight: "400px",
-        m: 6,
+        
+        m: 3,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "column",
+        maxWidth:'900px'
       }}
     >
       {" "}
       <Typography variant="h4" fontWeight={500} mb={2}>
         What is a path finding algorithm?
       </Typography>
-      <Typography variant="h6" fontWeight={400}>
+      <Typography variant="body1" fontWeight={400}>
         A path finding algorithm in layman terms is a step-by-step process where
         we start from a point (source) and look for the end-point (destination).
         To carry out this step-by-step process we have different types of
@@ -137,7 +138,7 @@ export default function BasicModal() {
       <Box
         component="img"
         sx={{
-          maxHeight: 250,
+          maxHeight: 200,
         }}
         alt="The house from the offer."
         src={image2}
@@ -148,8 +149,8 @@ export default function BasicModal() {
   const Step3 = (
     <Grid
       sx={{
-        minHeight: "400px",
-        m: 6,
+        
+        m: 3,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -161,29 +162,29 @@ export default function BasicModal() {
         Features
       </Typography>
       <Grid m={2}>
-        <Typography variant="h6" fontWeight={400}>
+        <Typography variant="body1" fontWeight={400}>
           1. You can choose your own algorithm!
         </Typography>
-        <Typography variant="h6" fontWeight={400}>
+        <Typography variant="body1" fontWeight={400}>
           2. You can set your own start and end points!
         </Typography>
-        <Typography variant="h6" fontWeight={400}>
+        <Typography variant="body1" fontWeight={400}>
           3. You can set walls anywhere!
         </Typography>
-        <Typography variant="h6" fontWeight={400}>
+        <Typography variant="body1" fontWeight={400}>
           4. You can drag and drop different weights!
         </Typography>
-        <Typography variant="h6" fontWeight={400}>
+        <Typography variant="body1" fontWeight={400}>
           5. You can set your own animation speed!
         </Typography>
-        <Typography variant="h6" fontWeight={400}>
+        <Typography variant="body1" fontWeight={400}>
           6. Generate a random maze!
         </Typography>
       </Grid>
       <Box
         component="img"
         sx={{
-          maxHeight: 250,
+          maxHeight: 200,
         }}
         alt="The house from the offer."
         src={image3}

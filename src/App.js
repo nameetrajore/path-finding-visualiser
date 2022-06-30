@@ -5,7 +5,7 @@ import PathFindingAlgorithms from "./pages/PathFindingAlgorithms";
 function App() {
   return (
     <>
-    <Header/>
+    
       <PathFindingAlgorithms/>
         {/* <Footer/> */}
     </>

@@ -52,11 +52,13 @@ function getAllNodes(grid) {
 // Only works when called *after* the dijkstra method above.
 export function getNodesInShortestPathOrder(finishNode) {
   const nodesInShortestPathOrder = [];
+  let dist = 0;
   let currentNode = finishNode;
   while (currentNode !== null) {
     nodesInShortestPathOrder.unshift(currentNode);
+    dist = dist + currentNode.weight;
     currentNode = currentNode.previousNode;
   }
-  console.log(nodesInShortestPathOrder);
+  console.log(dist);
   return nodesInShortestPathOrder;
 }

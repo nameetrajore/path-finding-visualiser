@@ -25,6 +25,7 @@ const style = {
   height: "80vh",
   width: "80vw",
   overflowY: "scroll",
+  
 };
 
 const About = (props) => {
@@ -32,7 +33,7 @@ const About = (props) => {
     <Modal open={props.open}>
       <Box sx={style}>
         <Box>
-        <Typography variant="h2" fontWeight={600}>
+        <Typography variant="h3" fontWeight={600}>
           About the app.
         </Typography>
         <Typography variant="h4" fontWeight={400} m={1} my={3}>
@@ -55,12 +56,12 @@ const About = (props) => {
                 This algorithm was first concieved by computer scientist Edsger
                 W in 1956 and is considered to be the father of all path finding
                 algorithms. This is a{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   weighted{" "}
                 </Typography>{" "}
                 path finding algorithm and{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   it guarantees shortest path possible.{" "}
                 </Typography>
@@ -83,12 +84,12 @@ const About = (props) => {
                 This is a part of informed searching technique where the source
                 has an idea about where the destination lies and takes informed
                 moves in that direction. This is a{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   weighted{" "}
                 </Typography>{" "}
                 path finding algorithm and{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   it guarantees shortest path possible.{" "}
                 </Typography>
@@ -112,12 +113,12 @@ const About = (props) => {
                 directions blindly for the destination node. It explores all
                 possible routes at one depth level before moving on to the next
                 one. This is an{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   unweighted{" "}
                 </Typography>{" "}
                 path finding algorithm and it{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   does not guarantee shortest path possible.{" "}
                 </Typography>
@@ -139,15 +140,14 @@ const About = (props) => {
               <Typography variant="body1" fontWeight={400}>
                 Unlike breadth first search this algorithm explores one branch
                 of the graph as deep as possible before back-tracking and
-                expanding to other nodes. It is possible for it to get lost in
-                an infinite branch and never make it to the solution node. This
+                expanding to other nodes. It is possible for it to get lost and never make it to the solution node. This
                 is an{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   unweighted{" "}
                 </Typography>{" "}
                 path finding algorithm and it{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   does not guarantee shortest path possible.{" "}
                 </Typography>
@@ -172,12 +172,12 @@ const About = (props) => {
                 destination node. The difference between this and A* algorithm
                 is that A* also takes into consideration the distance of the
                 current node from the source node. This is an{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   weighted{" "}
                 </Typography>{" "}
                 path finding algorithm and it{" "}
-                <Typography sx={{ display: "inline-block" }} fontWeight={600}>
+                <Typography sx={{ display: "inline" }} fontWeight={600}>
                   {" "}
                   does not guarantee shortest path possible.{" "}
                 </Typography>
@@ -207,14 +207,13 @@ const About = (props) => {
           </Grid>
         </Grid>
 
-
         <Grid item xs={6}>
         <Typography variant="h4" fontWeight={400} m={1} mt={4} mb={2}>
           Technologies Used:
         </Typography>
         <Grid ml={2}>
           <Typography variant="h6" fontWeight={400}>
-          <Link sx={{display:'inline-block', textDecoration:'none'}} href={'https://reactjs.org/'} >React</Link>, <Link sx={{display:'inline-block', textDecoration:'none'}} href={'https://mui.com/'} >MUI</Link> and <Link sx={{display:'inline-block', textDecoration:'none'}} href={'https://www.javascript.com/'} >Vanilla JS</Link>
+          <Link sx={{display:'inline', textDecoration:'none'}} href={'https://reactjs.org/'} >React</Link>, <Link sx={{display:'inline', textDecoration:'none'}} href={'https://mui.com/'} >MUI</Link> and <Link sx={{display:'inline', textDecoration:'none'}} href={'https://www.javascript.com/'} >Vanilla JS</Link>
           </Typography>
           </Grid>
         </Grid>
@@ -222,8 +221,8 @@ const About = (props) => {
         
         <Grid item color='gray'>
             <Box m={3}/>
-        <Typography variant="h2" p={1}  mb={0} >
-          Made with <span>&#10084;&#65039;</span> by <Link sx={{display:'inline-block', textDecoration:'none'}} href={'https://www.linkedin.com/in/nameet-rajore/'} >Nameet Rajore</Link>
+        <Typography variant="overline" p={1}  mb={0} >
+          Made with <span>&#10084;&#65039;</span> by <Link sx={{display:'inline', textDecoration:'none'}} href={'https://www.linkedin.com/in/nameet-rajore/'} >Nameet Rajore</Link>
         </Typography>
         </Grid>
        

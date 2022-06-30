@@ -1,0 +1,185 @@
+        <Grid
+          item
+          xs={2.5}
+          sx={{
+            boxShadow:
+              "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;",
+            p: 3,
+            mb: 2,
+            borderRadius: 2,
+          }}
+        >
+          <FormControl variant="standard" fullWidth>
+            <InputLabel id="demo-simple-select-label">
+              Choose Algorithm
+            </InputLabel>
+            <Select
+              labelId="demo-simple-select-label"
+              id="demo-simple-select"
+              value={algo}
+              label="Algorithm"
+              onChange={handleSelect}
+              sx={{ mb: 2 }}
+            >
+              <MenuItem value="Dijkstra's Algorithm">
+                Dijkstra's Algorithm
+              </MenuItem>
+              <MenuItem value="astar">A* Search Algorithm</MenuItem>
+              <MenuItem value="best-first">
+                Best First Search Algorithm
+              </MenuItem>
+              <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
+              <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>
+            </Select>
+          </FormControl>
+          <Button
+            onClick={runAlgo}
+            variant="contained"
+            disableElevation
+            size="large"
+            fullWidth
+            color="success"
+            disabled={disable || algo === ""}
+          >
+            Visualise
+          </Button>
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <Button
+                onClick={clearBoard}
+                variant="contained"
+                disableElevation
+                size="large"
+                fullWidth
+                color="error"
+                disabled={disableClear}
+                sx={{ mt: 2 }}
+              >
+                Clear Board
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                onClick={resetBoard}
+                variant="outlined"
+                disableElevation
+                size="large"
+                fullWidth
+                disabled={
+                  (disable || !disableClear) && (!disable || disableClear)
+                }
+                color="error"
+                sx={{ mt: 2 }}
+              >
+                Reset
+              </Button>
+            </Grid>
+          </Grid>
+          <Grid sx={{ mt: 2 }}>
+            <Typography>Speed</Typography>
+            <Slider
+              size="small"
+              defaultValue={speed}
+              value={speed}
+              min={1}
+              max={25}
+              valueLabelDisplay="auto"
+              onChange={speedHandler}
+              disabled={disable}
+            />
+          </Grid>
+          <Grid container sx={{ mt: 2 }}>
+            <Grid item xs={10}>
+              <Typography>Weight</Typography>
+              <Slider
+                size="small"
+                color="secondary"
+                defaultValue={weight}
+                value={weight}
+                min={2}
+                max={10}
+                valueLabelDisplay="auto"
+                onChange={weightHandler}
+                disabled={disable}
+              />
+            </Grid>
+            <Tooltip title="Drag & Drop" arrow followCursor>
+              <Grid
+                mt={3}
+                pl={2}
+                xs={2}
+                draggable
+                item
+                justifyItems="center"
+                alignItems="center"
+                onDragStart={(e) => weightStartDragHandler(e, weight)}
+                className="weight"
+                id={`weight-${weight}`}
+                sx={{ height: "25px" }}
+              >
+                <FitnessCenterIcon
+                  htmlColor={`rgb(${255 - weight * 20},${255 - weight * 20},${
+                    255 - weight * 20
+                  })`}
+                />
+              </Grid>
+            </Tooltip>
+          </Grid>
+          <Grid sx={{ mt: 2 }}>
+            <Typography>Maze Density</Typography>
+            <Slider
+              size="small"
+              color="primary"
+              defaultValue={mazeDensity}
+              value={mazeDensity}
+              min={1}
+              max={10}
+              valueLabelDisplay="auto"
+              onChange={(e, value) => {
+                setMazeDensity(value);
+              }}
+              disabled={disable}
+            />
+          </Grid>
+          <Grid container spacing={1}>
+            <Grid item xs={6}>
+              <Button
+                onClick={generateRandomMaze}
+                variant="contained"
+                disableElevation
+                disabled={disable}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Generate Wall Maze
+              </Button>
+            </Grid>
+            <Grid item xs={6}>
+              <Button
+                onClick={generateRandomWeightMaze}
+                variant="contained"
+                disableElevation
+                color="secondary"
+                disabled={disable}
+                fullWidth
+                sx={{ mt: 2 }}
+              >
+                Generate Weight Maze
+              </Button>
+            </Grid>
+            <Grid item xs={12}>
+              <Button
+                onClick={clearMaze}
+                variant="outlined"
+                disableElevation
+                fullWidth
+                disabled={disable}
+                sx={{ my: 1, mb: 2 }}
+              >
+                Clear Maze
+              </Button>
+            </Grid>
+          </Grid>
+
+          <Guide />
+        </Grid>

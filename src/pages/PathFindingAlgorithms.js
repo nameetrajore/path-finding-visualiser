@@ -10,6 +10,7 @@ import {
   MenuItem,
   Tooltip,
 } from "@mui/material";
+import Header from "../ui/Header";
 import React, { useState } from "react";
 import { AppBar, Toolbar } from "@mui/material";
 import { pathActions } from "../app/store";
@@ -33,7 +34,7 @@ const PathFindingAlgorithms = () => {
   // const cols = window.innerWidth/36.2;
   // const rows = window.innerHeight/30;
   const cols = 55;
-  const rows = 30;
+  const rows = 29;
 
   const dispatch = useDispatch();
   const start = useSelector((state) => state.start);
@@ -343,13 +344,14 @@ const PathFindingAlgorithms = () => {
   const clearBoard = () => {
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
-        const wall = document
-          .getElementById(`node-${i}-${j}`)
-          .classList.contains("node-wall")
-          ? "node-wall"
-          : "";
         setTimeout(() => {
-          document.getElementById(`node-${i}-${j}`).className = `node ${wall}`;
+          document.getElementById(`node-${i}-${j}`).className = `node ${
+            document
+              .getElementById(`node-${i}-${j}`)
+              .classList.contains("node-wall")
+              ? "node-wall"
+              : ""
+          }`;
         }, 50 * j);
       }
     }
@@ -390,6 +392,7 @@ const PathFindingAlgorithms = () => {
   };
 
   const resetBoard = () => {
+    clearBoard();
     dispatch(pathActions.setStart({ row: 14, col: 4 }));
     dispatch(pathActions.setFinish({ row: 14, col: 50 }));
     setGrid((prevGrid) => {
@@ -402,7 +405,6 @@ const PathFindingAlgorithms = () => {
           prevGrid[i][j].weight = 1;
         }
       }
-      clearBoard();
       return prevGrid;
     });
   };
@@ -434,21 +436,21 @@ const PathFindingAlgorithms = () => {
 
   return (
     <>
-      <Box m="10vh" />
+    <Header algo={algo} handleSelect={handleSelect} runAlgo={runAlgo} disable={disable} disableClear={disableClear} resetBoard={resetBoard} clearBoard={clearBoard}/>
+      <Box m="13vh" />
       <IntroModal />
       <NotFoundModal notFound={notFound} setNotFound={setNotFound} />
       <Grid
         container
         sx={{
-          px: 4,
-          minWidth: "1600px",
         }}
         direction="row"
         justifyContent="space-evenly"
         alignItems="center"
+        minWidth='1400px'
       >
-        <Grid item xs={9.5}>
-          <Grid item justifyContent="space-evenly" alignItems="center">
+        <Grid item xs={10}>
+          <Grid item justifyContent="space-evenly" alignItems="flex-start">
             {grid.map((row, rowIdx) => (
               <div key={rowIdx}>
                 {row.map((node, nodeIdx) => (
@@ -470,19 +472,17 @@ const PathFindingAlgorithms = () => {
             ))}
           </Grid>
         </Grid>
-
         <Grid
           item
-          xs={2.5}
+          xs={2}
           sx={{
-            boxShadow:
-              "rgba(0, 0, 0, 0.02) 0px 1px 3px 0px, rgba(27, 31, 35, 0.15) 0px 0px 0px 1px;",
-            p: 3,
-            mb: 2,
+           
+            px: 2,
+            
             borderRadius: 2,
           }}
         >
-          <FormControl variant="standard" fullWidth>
+          {/* <FormControl variant="standard" fullWidth >
             <InputLabel id="demo-simple-select-label">
               Choose Algorithm
             </InputLabel>
@@ -504,8 +504,8 @@ const PathFindingAlgorithms = () => {
               <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
               <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>
             </Select>
-          </FormControl>
-          <Button
+          </FormControl> */}
+          {/* <Button
             onClick={runAlgo}
             variant="contained"
             disableElevation
@@ -547,8 +547,8 @@ const PathFindingAlgorithms = () => {
                 Reset
               </Button>
             </Grid>
-          </Grid>
-          <Grid sx={{ mt: 2 }}>
+          </Grid> */}
+          <Grid sx={{ mt: 0 }}>
             <Typography>Speed</Typography>
             <Slider
               size="small"
@@ -561,9 +561,9 @@ const PathFindingAlgorithms = () => {
               disabled={disable}
             />
           </Grid>
-          <Grid container sx={{ mt: 2 }}>
+          <Grid container sx={{ mt: 1}}>
             <Grid item xs={10}>
-              <Typography>Weight</Typography>
+              <Typography >Weight</Typography>
               <Slider
                 size="small"
                 color="secondary"
@@ -578,9 +578,9 @@ const PathFindingAlgorithms = () => {
             </Grid>
             <Tooltip title="Drag & Drop" arrow followCursor>
               <Grid
-                mt={3}
-                pl={2}
-                xs={2}
+                mt={2.5}
+                ml={2}
+                xs={1}
                 draggable
                 item
                 justifyItems="center"
@@ -598,8 +598,8 @@ const PathFindingAlgorithms = () => {
               </Grid>
             </Tooltip>
           </Grid>
-          <Grid sx={{ mt: 2 }}>
-            <Typography>Maze Density</Typography>
+          <Grid sx={{ mt: 1 }}>
+            <Typography >Maze Density</Typography>
             <Slider
               size="small"
               color="primary"
@@ -615,27 +615,29 @@ const PathFindingAlgorithms = () => {
             />
           </Grid>
           <Grid container spacing={1}>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <Button
                 onClick={generateRandomMaze}
                 variant="contained"
+                
                 disableElevation
                 disabled={disable}
                 fullWidth
-                sx={{ mt: 2 }}
+                sx={{ mt: 1 }}
               >
                 Generate Wall Maze
               </Button>
             </Grid>
-            <Grid item xs={6}>
+            <Grid item xs={12}>
               <Button
                 onClick={generateRandomWeightMaze}
                 variant="contained"
                 disableElevation
+                
                 color="secondary"
                 disabled={disable}
                 fullWidth
-                sx={{ mt: 2 }}
+                sx={{ mt: 0 }}
               >
                 Generate Weight Maze
               </Button>
@@ -645,9 +647,10 @@ const PathFindingAlgorithms = () => {
                 onClick={clearMaze}
                 variant="outlined"
                 disableElevation
+                
                 fullWidth
                 disabled={disable}
-                sx={{ my: 1, mb: 2 }}
+                sx={{ mb: 0 }}
               >
                 Clear Maze
               </Button>
@@ -656,6 +659,7 @@ const PathFindingAlgorithms = () => {
 
           <Guide />
         </Grid>
+
       </Grid>
     </>
   );

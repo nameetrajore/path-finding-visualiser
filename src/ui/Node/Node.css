@@ -1,11 +1,9 @@
 .node {
-  width: 1.72%;
-  height: 20px;
+  width: var(--cell-size, 20px);
+  height: var(--cell-size, 20px);
+  flex-shrink: 0;
   outline: 1px solid rgb(216, 216, 216);
-  display: inline-block;
   border-radius: 2px;
-   margin-left: 0.066%; 
-  margin-top: -3.2px; 
 }
 
 .node-visited {

@@ -103,28 +103,26 @@ const Header = (props) => {
             Visualise Algo
           </Button>
           <Button
-                onClick={props.clearBoard}
-                variant="contained"
-                disableElevation
-                size="large"
-                color="error"
-                disabled={props.disableClear}
-              >
-                Clear Path
-              </Button>
+            onClick={props.clearBoard}
+            variant="contained"
+            disableElevation
+            size="large"
+            color="error"
+            disabled={props.disableClear}
+          >
+            Clear Path
+          </Button>
           <Button
-                onClick={props.resetBoard}
-                variant="outlined"
-                disableElevation
-                
-                
-                disabled={
-                  (props.disable || !props.disableClear) && (!props.disable || props.disableClear)
-                }
-                color="error"
-              >
-                Reset Board
-              </Button>
+            onClick={props.resetBoard}
+            variant="outlined"
+            disableElevation
+            disabled={
+              (props.disable || !props.disableClear) && (!props.disable || props.disableClear)
+            }
+            color="error"
+          >
+            Reset Board
+          </Button>
           </ButtonGroup>
           <IconButton onClick={infoHandler}>
             <Info />

@@ -1,22 +1,17 @@
 import {
   Box,
   Button,
-  Grid,
   Slider,
   Typography,
-  FormControl,
-  InputLabel,
+  Tooltip,
   Select,
   MenuItem,
-  Tooltip,
 } from "@mui/material";
 import Header from "../ui/Header";
-import React, { useState } from "react";
-import { AppBar, Toolbar } from "@mui/material";
+import React, { useState, useRef, useCallback, useEffect } from "react";
 import { pathActions } from "../app/store";
 import Node from "../ui/Node/Node";
-import { getNodesInShortestPathOrder } from "../algorithms/dijkstra";
-import { dijkstra } from "../algorithms/dijkstra";
+import { getNodesInShortestPathOrder, dijkstra } from "../algorithms/dijkstra";
 import { useSelector, useDispatch } from "react-redux";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import IntroModal from "../ui/IntroModal";
@@ -28,188 +23,288 @@ import {
   getNodesInShortestPathOrderAStarDiagonal,
 } from "../algorithms/astarDiagonal";
 import NotFoundModal from "../ui/NotFoundModal";
-import { astarManhattan, getNodesInShortestPathOrderAStarManhattan } from "../algorithms/astarManhattan";
+import {
+  astarManhattan,
+  getNodesInShortestPathOrderAStarManhattan,
+} from "../algorithms/astarManhattan";
+import { recursiveDivision } from "../algorithms/mazes/recursiveDivision";
+import { recursiveBacktracking } from "../algorithms/mazes/recursiveBacktracking";
+import { primsAlgorithm } from "../algorithms/mazes/prims";
+import AlgoInfo from "../ui/AlgoInfo";
+
+const CELL_SIZE = 24;
+const SIDEBAR_W = 240;
+const H_OFFSET = SIDEBAR_W + 32 + 16;
+const V_OFFSET = 88 + 32;
+
+const calcDims = () => ({
+  cols: Math.max(10, Math.floor((window.innerWidth - H_OFFSET) / CELL_SIZE)),
+  rows: Math.max(5,  Math.floor((window.innerHeight - V_OFFSET) / CELL_SIZE)),
+});
+
+const createNode = (col, row) => ({
+  row, col,
+  distance: Infinity, weight: 1, isVisited: false,
+  isWall: false, previousNode: null, f: 0,
+});
+
+const buildGrid = (rows, cols) =>
+  Array.from({ length: rows }, (_, i) =>
+    Array.from({ length: cols }, (_, j) => createNode(j, i))
+  );
+
+const defaultStart  = (rows)       => ({ row: Math.floor(rows / 2), col: 2 });
+const defaultFinish = (rows, cols) => ({ row: Math.floor(rows / 2), col: cols - 3 });
 
 const PathFindingAlgorithms = () => {
-  // const cols = window.innerWidth/36.2;
-  // const rows = window.innerHeight/30;
-  const cols = 55;
-  const rows = 29;
-
   const dispatch = useDispatch();
-  const start = useSelector((state) => state.start);
+  const start  = useSelector((state) => state.start);
   const finish = useSelector((state) => state.finish);
-  const [mouseIsPressed, setMouseIsPressed] = useState(false);
   const [mazeDensity, setMazeDensity] = useState(5);
+  const [mazeType, setMazeType]       = useState("random-wall");
 
-  const getNewGridWithWallToggled = (grid, row, col) => {
-    const newGrid = grid.slice();
-    const node = newGrid[row][col];
-    const newNode = {
-      ...node,
-      isWall: !node.isWall,
-      weight: 1,
+  const [dims, setDims] = useState(calcDims);
+  const { cols, rows } = dims;
+
+  const [grid, setGrid]               = useState(() => buildGrid(dims.rows, dims.cols));
+  const [speed, setSpeed]             = useState(10);
+  const [disable, setDisable]         = useState(false);
+  const [disableClear, setDisableClear] = useState(true);
+  const [algo, setAlgo]               = useState("");
+  const [weight, setWeight]           = useState(2);
+  const [notFound, setNotFound]       = useState(false);
+  const [stats, setStats]             = useState(null);
+
+  useEffect(() => {
+    let timeout;
+    const handleResize = () => {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => setDims(calcDims()), 150);
     };
-    newGrid[row][col] = newNode;
-    return newGrid;
-  };
+    window.addEventListener("resize", handleResize);
+    return () => { window.removeEventListener("resize", handleResize); clearTimeout(timeout); };
+  }, []);
 
-  const getNewGridWithWallFalse = (grid, row, col) => {
-    const newGrid = grid.slice();
-    const node = newGrid[row][col];
-    const newNode = {
-      ...node,
-      isWall: false,
-      weight: 1,
-    };
-    newGrid[row][col] = newNode;
-    return newGrid;
-  };
+  useEffect(() => {
+    dispatch(pathActions.setStart(defaultStart(rows)));
+    dispatch(pathActions.setFinish(defaultFinish(rows, cols)));
+    setGrid(buildGrid(rows, cols));
+    setDisable(false);
+    setDisableClear(true);
+    setStats(null);
+  }, [rows, cols, dispatch]);
 
-  const getGridWithWeights = (row, col, weight) => {
-    const newGrid = grid.slice();
-    const node = newGrid[row][col];
-    const newNode = {
-      ...node,
-      weight,
-    };
-    newGrid[row][col] = newNode;
-    // console.log(newGrid);
-    return newGrid;
-  };
+  const mouseIsPressedRef = useRef(false);
+  const disableRef        = useRef(disable);
+  const startRef          = useRef(start);
+  const finishRef         = useRef(finish);
+  const pendingWallsRef   = useRef({});
+  disableRef.current = disable;
+  startRef.current   = start;
+  finishRef.current  = finish;
 
-  const mouseDownHandler = (e, row, col) => {
-    // console.log(row, col);
-    // console.log(finish, start);
-    // console.log(e.target);
-    // console.log(e.target.closest("div"));
-    if (disable) return;
+  const mouseDownHandler = useCallback((e, row, col) => {
+    if (disableRef.current) return;
     if (
       e.target.closest("div").className === "start" ||
       e.target.closest("div").className === "finish"
-    )
-      return;
+    ) return;
     if (e.target.closest("div").className.indexOf("weight") >= 0) {
-      const newGrid = getNewGridWithWallFalse(grid, row, col);
-      setGrid(newGrid);
+      setGrid(prev => {
+        const newGrid = prev.slice();
+        newGrid[row][col] = { ...prev[row][col], isWall: false, weight: 1 };
+        return newGrid;
+      });
       return;
     }
-    e.target.innerHTML = "";
-    const newGrid = getNewGridWithWallToggled(grid, row, col);
-    setGrid(newGrid);
-    setMouseIsPressed(true);
-  };
+    const el = document.getElementById(`node-${row}-${col}`);
+    if (!el) return;
+    const isWall = el.classList.contains("node-wall");
+    if (isWall) {
+      el.classList.remove("node-wall");
+      pendingWallsRef.current[`${row}-${col}`] = false;
+    } else {
+      el.classList.add("node-wall");
+      pendingWallsRef.current[`${row}-${col}`] = true;
+    }
+    mouseIsPressedRef.current = true;
+  }, []);
+
+  const mouseEnterHandler = useCallback((row, col) => {
+    if (!mouseIsPressedRef.current) return;
+    const s = startRef.current;
+    const f = finishRef.current;
+    if ((s.row === row && s.col === col) || (f.row === row && f.col === col)) return;
+    const el = document.getElementById(`node-${row}-${col}`);
+    if (!el || el.classList.contains("node-wall")) return;
+    el.classList.add("node-wall");
+    pendingWallsRef.current[`${row}-${col}`] = true;
+  }, []);
+
+  const mouseUpHandler = useCallback(() => {
+    mouseIsPressedRef.current = false;
+    const changes = pendingWallsRef.current;
+    if (Object.keys(changes).length === 0) return;
+    pendingWallsRef.current = {};
+    setGrid(prev => {
+      const newGrid = prev.map(r => r.slice());
+      for (const [key, isWall] of Object.entries(changes)) {
+        const [r, c] = key.split("-").map(Number);
+        newGrid[r][c] = { ...newGrid[r][c], isWall, weight: 1 };
+      }
+      return newGrid;
+    });
+  }, []);
+
+  const setNodeWeight = useCallback((row, col, w) => {
+    setGrid(prev => {
+      const newGrid = prev.slice();
+      newGrid[row][col] = { ...prev[row][col], weight: w };
+      return newGrid;
+    });
+  }, []);
+
+  const onDropStart  = useCallback((row, col) => dispatch(pathActions.setStart({ row, col })), [dispatch]);
+  const onDropFinish = useCallback((row, col) => dispatch(pathActions.setFinish({ row, col })), [dispatch]);
 
   const clearMaze = () => {
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        // if (
-        //   (start.row !== j || start.col !== i) &&
-        //   (finish.row !== j || finish.col !== i)
-        // ) {
-        const newGrid = getNewGridWithWallFalse(grid, j, i);
-        setGrid(newGrid);
-        // }
+    setGrid(grid.map(row => row.map(node => ({ ...node, isWall: false, weight: 1 }))));
+    for (let r = 0; r < rows; r++) {
+      for (let c = 0; c < cols; c++) {
+        const el = document.getElementById(`node-${r}-${c}`);
+        if (el && el.classList.contains("node-wall")) el.classList.remove("node-wall");
       }
     }
   };
 
   const generateRandomMaze = () => {
-    clearMaze();
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        let r = Math.random();
-        if (
-          r < 0.033 * mazeDensity &&
-          (start.row !== j || start.col !== i) &&
-          (finish.row !== j || finish.col !== i)
-        ) {
-          const newGrid = getNewGridWithWallToggled(grid, j, i);
-          setGrid(newGrid);
-        }
-      }
-    }
+    setGrid(
+      grid.map((row, j) =>
+        row.map((node, i) => ({
+          ...node,
+          isWall:
+            !(start.row === j && start.col === i) &&
+            !(finish.row === j && finish.col === i) &&
+            Math.random() < 0.033 * mazeDensity,
+          weight: 1,
+        }))
+      )
+    );
   };
 
   const generateRandomWeightMaze = () => {
-    clearMaze();
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        let w = Math.floor(Math.random() * 10) + 2;
-        let r = Math.random();
-        if (
-          r < 0.05 * mazeDensity &&
-          (start.row !== j || start.col !== i) &&
-          (finish.row !== j || finish.col !== i)
-        ) {
-          const newGrid = getGridWithWeights(j, i, w);
-          setGrid(newGrid);
+    setGrid(
+      grid.map((row, j) =>
+        row.map((node, i) => {
+          const isStart  = start.row === j && start.col === i;
+          const isFinish = finish.row === j && finish.col === i;
+          const w = Math.floor(Math.random() * 10) + 2;
+          return {
+            ...node,
+            isWall: false,
+            weight: !isStart && !isFinish && Math.random() < 0.05 * mazeDensity ? w : 1,
+          };
+        })
+      )
+    );
+  };
+
+  const animateMaze = (operations, mode) => {
+    setDisable(true);
+
+    if (mode === "add-walls") {
+      setGrid(buildGrid(rows, cols));
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          const el = document.getElementById(`node-${r}-${c}`);
+          if (el) el.className = "node";
         }
-      }
+    } else {
+      setGrid(prev =>
+        prev.map((row, r) =>
+          row.map((node, c) => ({
+            ...node,
+            isWall: !(r === start.row && c === start.col) && !(r === finish.row && c === finish.col),
+            weight: 1,
+          }))
+        )
+      );
+      for (let r = 0; r < rows; r++)
+        for (let c = 0; c < cols; c++) {
+          const el = document.getElementById(`node-${r}-${c}`);
+          if (!el) continue;
+          el.className =
+            (r === start.row && c === start.col) || (r === finish.row && c === finish.col)
+              ? "node"
+              : "node node-wall";
+        }
+    }
+
+    const delay = Math.max(5, 100 / speed);
+
+    operations.forEach((op, i) => {
+      setTimeout(() => {
+        const el = document.getElementById(`node-${op.row}-${op.col}`);
+        if (!el) return;
+        el.className = mode === "add-walls" ? "node node-wall" : "node";
+        if (i === operations.length - 1) {
+          setGrid(prev =>
+            prev.map((row, r) =>
+              row.map((node, c) => {
+                const el2 = document.getElementById(`node-${r}-${c}`);
+                return { ...node, isWall: el2 ? el2.classList.contains("node-wall") : node.isWall, weight: 1 };
+              })
+            )
+          );
+          setDisable(false);
+        }
+      }, delay * i);
+    });
+
+    if (operations.length === 0) setDisable(false);
+  };
+
+  const generateMaze = () => {
+    if (mazeType === "random-wall") {
+      generateRandomMaze();
+    } else if (mazeType === "recursive-division") {
+      animateMaze(recursiveDivision(rows, cols, start, finish), "add-walls");
+    } else if (mazeType === "recursive-backtracking") {
+      animateMaze(recursiveBacktracking(rows, cols, start, finish), "carve");
+    } else if (mazeType === "prims") {
+      animateMaze(primsAlgorithm(rows, cols, start, finish), "carve");
     }
   };
 
-  const mouseEnterHandler = (row, col) => {
-    // if (!mouseIsPressed) return;
-    // console.log("executed");
-    // if (
-    //   (start.row === row && start.col === col) ||
-    //   (finish.col === col && finish.row === row)
-    // )
-    //   return;
-    // const newGrid = getNewGridWithWallToggled(grid, row, col);
-    // setGrid(newGrid);
-  };
-
-  const mouseUpHandler = () => {
-    // setMouseIsPressed(false);
-  };
-
-  const createNode = (col, row) => {
-    return {
-      row,
-      col,
-      distance: Infinity,
-      weight: 1,
-      isVisited: false,
-      isWall: false,
-      previousNode: null,
-      f: 0,
-      // getGridWithWeights,
-      // mouseDownHandler,
-      // mouseEnterHandler,
-      // mouseUpHandler,
-    };
-  };
-
-  const getInitialGrid = () => {
-    const grid = [];
-    for (let i = 0; i < rows; i++) {
-      let currentRow = [];
-      for (let j = 0; j < cols; j++) {
-        currentRow.push(createNode(j, i));
-      }
-      grid.push(currentRow);
+  const animateShortestPath = (nodesInShortestPathOrder, visitedCount, animSpeed) => {
+    if (nodesInShortestPathOrder.length === 1) {
+      setDisableClear(false);
+      setNotFound(true);
+      setStats({ visited: visitedCount, pathLength: 0 });
+      return;
     }
-    return grid;
+    for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
+      setTimeout(() => {
+        const node = nodesInShortestPathOrder[i];
+        document.getElementById(`node-${node.row}-${node.col}`).className =
+          "node node-visited node-shortest-path";
+        if (i === nodesInShortestPathOrder.length - 1) {
+          setDisableClear(false);
+          setStats({ visited: visitedCount, pathLength: nodesInShortestPathOrder.length - 1 });
+        }
+      }, (100 / animSpeed) * i);
+    }
   };
-
-  const [grid, setGrid] = useState(getInitialGrid());
-  const [speed, setSpeed] = useState(10);
-  const [disable, setDisable] = useState(false);
-  const [disableClear, setDisableClear] = useState(true);
-  const [visitedNodes, setVisitedNodes] = useState([]);
-  const [algo, setAlgo] = useState("");
-  const [weight, setWeight] = useState(2);
-  const [notFound, setNotFound] = useState(false);
 
   const animateAlgo = (visitedNodesInOrder, nodesInShortestPathOrder) => {
     setDisable(true);
+    setStats(null);
+    const animSpeed = speed;
     for (let i = 0; i <= visitedNodesInOrder.length; i++) {
       if (i === visitedNodesInOrder.length) {
         setTimeout(() => {
-          animateShortestPath(nodesInShortestPathOrder);
-        }, (100 / speed) * i);
+          animateShortestPath(nodesInShortestPathOrder, visitedNodesInOrder.length, animSpeed);
+        }, (100 / animSpeed) * i);
         return;
       }
       setTimeout(() => {
@@ -217,450 +312,197 @@ const PathFindingAlgorithms = () => {
         const element = document.getElementById(`node-${node.row}-${node.col}`);
         if (!element.className.includes("node-visited"))
           element.className = "node node-visited";
-      }, (100 / speed) * i);
+      }, (100 / animSpeed) * i);
     }
-  };
-
-  const animateShortestPath = (nodesInShortestPathOrder) => {
-    for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
-      setTimeout(() => {
-        const node = nodesInShortestPathOrder[i];
-        document.getElementById(`node-${node.row}-${node.col}`).className =
-          " node node-visited node-shortest-path";
-        if (i === nodesInShortestPathOrder.length - 2) setDisableClear(false);
-      }, 20 * i);
-    }
-    if (nodesInShortestPathOrder.length === 1) {
-      setDisableClear(false);
-      setTimeout(setNotFound(true), 20);
-    }
-  };
-
-  const visualiseDijkstra = () => {
-    let visitedNodesInOrder = dijkstra(
-      grid,
-      grid[start.row][start.col],
-      grid[finish.row][finish.col]
-    );
-    //console.log(visitedNodesInOrder);
-    setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrder(
-      grid[finish.row][finish.col]
-    );
-    console.log(nodesInShortestPathOrder.length);
-    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
-  };
-
-  const visualiseBfs = () => {
-    let visitedNodesInOrder = bfs(
-      grid,
-      grid[start.row][start.col],
-      grid[finish.row][finish.col]
-    );
-    setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrderBfs(
-      grid[finish.row][finish.col]
-    );
-    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
-  };
-
-  const visualiseAStarDiagonal = () => {
-    const visitedNodesInOrder = astarDiagonal(
-      grid,
-      grid[start.row][start.col],
-      grid[finish.row][finish.col]
-    );
-    setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrderAStarDiagonal(
-      grid[finish.row][finish.col]
-    );
-    console.log(nodesInShortestPathOrder.length);
-    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
-  };
-
-  const visualiseAStar = () => {
-    const visitedNodesInOrder = astarManhattan(
-      grid,
-      grid[start.row][start.col],
-      grid[finish.row][finish.col]
-    );
-    //console.log(visitedNodesInOrder);
-    setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrderAStarManhattan(
-      grid[finish.row][finish.col]
-    );
-    console.log(nodesInShortestPathOrder.length);
-    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
-  };
-
-  const visualiseDfs = () => {
-    let visitedNodesInOrder = dfs(
-      grid,
-      grid[start.row][start.col],
-      grid[finish.row][finish.col]
-    );
-    setVisitedNodes(visitedNodesInOrder);
-    const nodesInShortestPathOrder = getNodesInShortestPathOrderDfs(
-      grid[finish.row][finish.col]
-    );
-    animateAlgo(visitedNodesInOrder, nodesInShortestPathOrder);
-  };
-
-  //For future development
-  const visualiseWithoutAnimation = (row, col) => {
-    // for (let i = 0; i < cols; i++) {
-    //   for (let j = 0; j < rows; j++) {
-    //     const node = grid[i][j];
-    //     // console.log(grid);
-    //     document.getElementById(
-    //       `node-${node.row}-${node.col}`
-    //     ).className = `node ${node.isWall ? "node-wall" : ""}`;
-    //   }
-    // }
-    // let visitedNodesInOrder = dijkstra(
-    //   grid,
-    //   grid[start.row][start.col],
-    //   grid[row][col]
-    // );
-    // const nodesInShortestPathOrder = getNodesInShortestPathOrder(
-    //   grid[row][col]
-    // );
-    // for (let i = 0; i <= visitedNodesInOrder.length; i++) {
-    //   if (i === visitedNodesInOrder.length) {
-    //     for (let i = 0; i < nodesInShortestPathOrder.length; i++) {
-    //       const node = nodesInShortestPathOrder[i];
-    //       document.getElementById(`node-${node.row}-${node.col}`).className =
-    //         " node node-visited-no-anim node-shortest-path-no-anim";
-    //     }
-    //     return;
-    //   }
-    //   const node = visitedNodesInOrder[i];
-    //   const element = document.getElementById(`node-${node.row}-${node.col}`);
-    //   if (!element.className.includes("node-visited"))
-    //     element.className = "node node-visited-no-anim";
-    // }
   };
 
   const clearBoard = () => {
     for (let i = 0; i < rows; i++) {
       for (let j = 0; j < cols; j++) {
         setTimeout(() => {
-          document.getElementById(`node-${i}-${j}`).className = `node ${
-            document
-              .getElementById(`node-${i}-${j}`)
-              .classList.contains("node-wall")
-              ? "node-wall"
-              : ""
-          }`;
+          const el = document.getElementById(`node-${i}-${j}`);
+          el.className = `node ${el.classList.contains("node-wall") ? "node-wall" : ""}`;
         }, 50 * j);
       }
     }
-    // for (let i = 0; i < visitedNodes.length; i++) {
-    //   setTimeout(() => {
-    //     document.getElementById(
-    //       `node-${finish.row}-${finish.col}`).className ='node';
-    //     const node = visitedNodes[i];
-    //     setTimeout(() => {
-    //       document.getElementById(
-    //         `node-${node.row}-${node.col}`
-    //       ).className = `node ${node.isWall ? "node-wall" : ""}`;
-    //     }, 2 * i);
-    //   });
-    // }
-
-    // if (
-    //   document.getElementsByClassName("node node-visited node-shortest-path")
-    //     .length !== 0
-    // )
-    //   document.getElementsByClassName(
-    //     "node node-visited node-shortest-path"
-    //   )[0].className = "node";
-
-    setGrid((prevGrid) => {
-      for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-          prevGrid[i][j].distance = Infinity;
-          prevGrid[i][j].isVisited = false;
-          prevGrid[i][j].previousNode = null;
-        }
-      }
-      return prevGrid;
-    });
-
+    setGrid(prevGrid =>
+      prevGrid.map(row =>
+        row.map(node => ({ ...node, distance: Infinity, isVisited: false, previousNode: null, f: 0 }))
+      )
+    );
     setDisable(false);
     setDisableClear(true);
+    setStats(null);
   };
 
   const resetBoard = () => {
     clearBoard();
-    dispatch(pathActions.setStart({ row: 14, col: 4 }));
-    dispatch(pathActions.setFinish({ row: 14, col: 50 }));
-    setGrid((prevGrid) => {
-      for (let i = 0; i < rows; i++) {
-        for (let j = 0; j < cols; j++) {
-          prevGrid[i][j].isWall = false;
-          prevGrid[i][j].distance = Infinity;
-          prevGrid[i][j].isVisited = false;
-          prevGrid[i][j].previousNode = null;
-          prevGrid[i][j].weight = 1;
-        }
-      }
-      return prevGrid;
-    });
-  };
-
-  const speedHandler = (event, value) => {
-    setSpeed(value);
-  };
-
-  const weightHandler = (event, value) => {
-    setWeight(value);
-  };
-
-  const weightStartDragHandler = (e, weight) => {
-    e.dataTransfer.setData("class", "weight");
-    e.dataTransfer.setData("weight", weight);
-  };
-
-  const handleSelect = (e) => {
-    setAlgo(e.target.value);
+    dispatch(pathActions.setStart(defaultStart(rows)));
+    dispatch(pathActions.setFinish(defaultFinish(rows, cols)));
+    setGrid(buildGrid(rows, cols));
   };
 
   const runAlgo = () => {
-    if (algo === "Dijkstra's Algorithm") visualiseDijkstra();
-    else if (algo === "bfs") visualiseBfs();
-    else if (algo === "dfs") visualiseDfs();
-    else if (algo === "astar-diagonal") visualiseAStarDiagonal();
-    else if (algo === "astar") visualiseAStar();
+    const s = grid[start.row][start.col];
+    const f = grid[finish.row][finish.col];
+    if (algo === "Dijkstra's Algorithm")
+      animateAlgo(dijkstra(grid, s, f), getNodesInShortestPathOrder(f));
+    else if (algo === "bfs")
+      animateAlgo(bfs(grid, s, f), getNodesInShortestPathOrderBfs(f));
+    else if (algo === "dfs")
+      animateAlgo(dfs(grid, s, f), getNodesInShortestPathOrderDfs(f));
+    else if (algo === "astar-diagonal")
+      animateAlgo(astarDiagonal(grid, s, f), getNodesInShortestPathOrderAStarDiagonal(f));
+    else if (algo === "astar")
+      animateAlgo(astarManhattan(grid, s, f), getNodesInShortestPathOrderAStarManhattan(f));
   };
 
   return (
     <>
-    <Header algo={algo} handleSelect={handleSelect} runAlgo={runAlgo} disable={disable} disableClear={disableClear} resetBoard={resetBoard} clearBoard={clearBoard}/>
-      <Box m="13vh" />
+      <Header
+        algo={algo}
+        handleSelect={(e) => setAlgo(e.target.value)}
+        runAlgo={runAlgo}
+        disable={disable}
+        disableClear={disableClear}
+        resetBoard={resetBoard}
+        clearBoard={clearBoard}
+      />
       <IntroModal />
       <NotFoundModal notFound={notFound} setNotFound={setNotFound} />
-      <Grid
-        container
-        sx={{
-        }}
-        direction="row"
-        justifyContent="space-evenly"
-        alignItems="center"
-        minWidth='1400px'
-      >
-        <Grid item xs={10}>
-          <Grid item justifyContent="space-evenly" alignItems="flex-start">
+      <Box sx={{ display: "flex", flexDirection: "column", height: "100vh", overflow: "hidden" }}>
+        <Box sx={{ height: "88px", flexShrink: 0 }} />
+        <Box
+          sx={{ flex: 1, display: "flex", alignItems: "stretch", gap: 2, px: 2, py: 1, minHeight: 0 }}
+          style={{ "--cell-size": `${CELL_SIZE}px` }}
+        >
+          <Box sx={{ lineHeight: 0, alignSelf: "flex-start" }}>
             {grid.map((row, rowIdx) => (
-              <div key={rowIdx}>
+              <div key={rowIdx} style={{ display: "flex" }}>
                 {row.map((node, nodeIdx) => (
                   <Node
                     key={nodeIdx}
                     {...node}
+                    isStart={start.row === rowIdx && start.col === nodeIdx}
+                    isFinish={finish.row === rowIdx && finish.col === nodeIdx}
                     disable={disable}
                     disableClear={disableClear}
-                    visualiseWithoutAnimation={visualiseWithoutAnimation}
-                    setGrid={setGrid}
-                    getGridWithWeights={getGridWithWeights}
+                    setNodeWeight={setNodeWeight}
                     mouseDownHandler={mouseDownHandler}
                     mouseEnterHandler={mouseEnterHandler}
                     mouseUpHandler={mouseUpHandler}
-                    // added mouseUp, mouseDown and mouseEnter
+                    onDropStart={onDropStart}
+                    onDropFinish={onDropFinish}
                   />
                 ))}
               </div>
             ))}
-          </Grid>
-        </Grid>
-        <Grid
-          item
-          xs={2}
-          sx={{
-           
-            px: 2,
-            
-            borderRadius: 2,
-          }}
-        >
-          {/* <FormControl variant="standard" fullWidth >
-            <InputLabel id="demo-simple-select-label">
-              Choose Algorithm
-            </InputLabel>
-            <Select
-              labelId="demo-simple-select-label"
-              id="demo-simple-select"
-              value={algo}
-              label="Algorithm"
-              onChange={handleSelect}
-              sx={{ mb: 2 }}
-            >
-              <MenuItem value="Dijkstra's Algorithm">
-                Dijkstra's Algorithm
-              </MenuItem>
-              <MenuItem value="astar">A* Search Algorithm</MenuItem>
-              <MenuItem value="best-first">
-                Best First Search Algorithm
-              </MenuItem>
-              <MenuItem value="dfs">Depth First Search Algorithm</MenuItem>
-              <MenuItem value="bfs">Breadth First Search Algorithm</MenuItem>
-            </Select>
-          </FormControl> */}
-          {/* <Button
-            onClick={runAlgo}
-            variant="contained"
-            disableElevation
-            size="large"
-            fullWidth
-            color="success"
-            disabled={disable || algo === ""}
-          >
-            Visualise
-          </Button>
-          <Grid container spacing={1}>
-            <Grid item xs={6}>
-              <Button
-                onClick={clearBoard}
-                variant="contained"
-                disableElevation
-                size="large"
-                fullWidth
-                color="error"
-                disabled={disableClear}
-                sx={{ mt: 2 }}
-              >
-                Clear Board
-              </Button>
-            </Grid>
-            <Grid item xs={6}>
-              <Button
-                onClick={resetBoard}
-                variant="outlined"
-                disableElevation
-                size="large"
-                fullWidth
-                disabled={
-                  (disable || !disableClear) && (!disable || disableClear)
-                }
-                color="error"
-                sx={{ mt: 2 }}
-              >
-                Reset
-              </Button>
-            </Grid>
-          </Grid> */}
-          <Grid sx={{ mt: 0 }}>
-            <Typography>Speed</Typography>
-            <Slider
-              size="small"
-              defaultValue={speed}
-              value={speed}
-              min={1}
-              max={25}
-              valueLabelDisplay="auto"
-              onChange={speedHandler}
-              disabled={disable}
-            />
-          </Grid>
-          <Grid container sx={{ mt: 1}}>
-            <Grid item xs={10}>
-              <Typography >Weight</Typography>
+          </Box>
+
+          {/* Sidebar */}
+          <Box sx={{ width: SIDEBAR_W, flexShrink: 0, alignSelf: "stretch", overflowY: "auto", px: 1 }}>
+            <Box sx={{ mb: 1 }}>
+              <Typography>Speed</Typography>
               <Slider
                 size="small"
-                color="secondary"
-                defaultValue={weight}
-                value={weight}
-                min={2}
-                max={10}
+                value={speed}
+                min={1} max={25}
                 valueLabelDisplay="auto"
-                onChange={weightHandler}
+                onChange={(_, v) => setSpeed(v)}
                 disabled={disable}
               />
-            </Grid>
-            <Tooltip title="Drag & Drop" arrow followCursor>
-              <Grid
-                mt={2.5}
-                ml={2}
-                xs={1}
-                draggable
-                item
-                justifyItems="center"
-                alignItems="center"
-                onDragStart={(e) => weightStartDragHandler(e, weight)}
-                className="weight"
-                id={`weight-${weight}`}
-                sx={{ height: "25px" }}
-              >
-                <FitnessCenterIcon
-                  htmlColor={`rgb(${255 - weight * 20},${255 - weight * 20},${
-                    255 - weight * 20
-                  })`}
+            </Box>
+
+            <Box sx={{ display: "flex", alignItems: "center", gap: 1, mb: 1 }}>
+              <Box sx={{ flex: 1 }}>
+                <Typography>Weight</Typography>
+                <Slider
+                  size="small"
+                  color="secondary"
+                  value={weight}
+                  min={2} max={10}
+                  valueLabelDisplay="auto"
+                  onChange={(_, v) => setWeight(v)}
+                  disabled={disable}
                 />
-              </Grid>
-            </Tooltip>
-          </Grid>
-          <Grid sx={{ mt: 1 }}>
-            <Typography >Maze Density</Typography>
-            <Slider
-              size="small"
-              color="primary"
-              defaultValue={mazeDensity}
-              value={mazeDensity}
-              min={1}
-              max={10}
-              valueLabelDisplay="auto"
-              onChange={(e, value) => {
-                setMazeDensity(value);
-              }}
-              disabled={disable}
-            />
-          </Grid>
-          <Grid container spacing={1}>
-            <Grid item xs={12}>
-              <Button
-                onClick={generateRandomMaze}
-                variant="contained"
-                
-                disableElevation
+              </Box>
+              <Tooltip title="Drag & Drop" arrow followCursor>
+                <Box
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("class", "weight");
+                    e.dataTransfer.setData("weight", weight);
+                  }}
+                  className="weight"
+                  id={`weight-${weight}`}
+                  sx={{ mt: 2, cursor: "grab" }}
+                >
+                  <FitnessCenterIcon
+                    htmlColor={`rgb(${255 - weight * 20},${255 - weight * 20},${255 - weight * 20})`}
+                  />
+                </Box>
+              </Tooltip>
+            </Box>
+
+            <Box sx={{ mb: 1 }}>
+              <Typography>Maze Density</Typography>
+              <Slider
+                size="small"
+                value={mazeDensity}
+                min={1} max={10}
+                valueLabelDisplay="auto"
+                onChange={(_, v) => setMazeDensity(v)}
                 disabled={disable}
+              />
+            </Box>
+
+            <Box sx={{ mb: 2 }}>
+              <Typography gutterBottom>Maze Type</Typography>
+              <Select
+                value={mazeType}
+                onChange={(e) => setMazeType(e.target.value)}
+                size="small"
                 fullWidth
-                sx={{ mt: 1 }}
+                disabled={disable}
               >
-                Generate Wall Maze
+                <MenuItem value="random-wall">Random Wall</MenuItem>
+                <MenuItem value="recursive-division">Recursive Division</MenuItem>
+                <MenuItem value="recursive-backtracking">Recursive Backtracking</MenuItem>
+                <MenuItem value="prims">Prim's Algorithm</MenuItem>
+              </Select>
+            </Box>
+
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
+              <Button onClick={generateMaze} variant="contained" disableElevation disabled={disable} fullWidth>
+                Generate Maze
               </Button>
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                onClick={generateRandomWeightMaze}
-                variant="contained"
-                disableElevation
-                
-                color="secondary"
-                disabled={disable}
-                fullWidth
-                sx={{ mt: 0 }}
-              >
+              <Button onClick={generateRandomWeightMaze} variant="contained" disableElevation color="secondary" disabled={disable} fullWidth>
                 Generate Weight Maze
               </Button>
-            </Grid>
-            <Grid item xs={12}>
-              <Button
-                onClick={clearMaze}
-                variant="outlined"
-                disableElevation
-                
-                fullWidth
-                disabled={disable}
-                sx={{ mb: 0 }}
-              >
+              <Button onClick={clearMaze} variant="outlined" disableElevation fullWidth disabled={disable}>
                 Clear Maze
               </Button>
-            </Grid>
-          </Grid>
+            </Box>
 
-          <Guide />
-        </Grid>
+            <AlgoInfo algo={algo} />
 
-      </Grid>
+            <Guide />
+
+            {stats && (
+              <Box sx={{ mt: 2, p: 2, borderRadius: "10px", outline: "1px solid #C7C7C7" }}>
+                <Typography variant="subtitle2" fontWeight={700} mb={1}>Results</Typography>
+                <Typography variant="body2">
+                  Nodes visited: <strong>{stats.visited}</strong>
+                </Typography>
+                <Typography variant="body2">
+                  Path length:{" "}
+                  <strong>{stats.pathLength === 0 ? "Not found" : stats.pathLength}</strong>
+                </Typography>
+              </Box>
+            )}
+          </Box>
+        </Box>
+      </Box>
     </>
   );
 };
